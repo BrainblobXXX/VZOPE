@@ -1,0 +1,538 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   «В ЖОПЕ» — CRT / пиксель-стиль
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --amber: #ffb000;
+  --p1: #33ff00;
+  --screen-bg: #331a00;
+  --screen-deep: #241100;
+  --plastic: #d9cdb8;
+  --plastic-dark: #a39681;
+  --wood: #5c4033;
+  --dirt: #2b2622;
+  --rec: #ff4a4a;
+}
+
+.font-pixel {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* ── Экран ЭЛТ ── */
+
+.crt-glass {
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(255, 176, 0, 0.06), transparent 60%),
+    linear-gradient(180deg, #2d1600 0%, var(--screen-bg) 40%, var(--screen-deep) 100%);
+}
+
+.crt-overlays {
+  pointer-events: none;
+}
+
+.crt-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.22) 0px,
+    rgba(0, 0, 0, 0.22) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+.crt-vignette {
+  background: radial-gradient(ellipse at center, transparent 52%, rgba(0, 0, 0, 0.42) 100%);
+}
+
+.crt-flicker {
+  background: #fff;
+  opacity: 0.015;
+  animation: crt-flicker 3.2s infinite steps(2);
+}
+
+/* стеклянный блик на трубке (статичный, диагональный) */
+.crt-glare {
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.09) 0%,
+    rgba(255, 255, 255, 0.045) 12%,
+    transparent 26%,
+    transparent 100%
+  );
+}
+
+/* катящаяся полоса развёртки */
+.crt-rollbar {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 240, 200, 0.05) 42%,
+    rgba(255, 240, 200, 0.09) 50%,
+    rgba(255, 240, 200, 0.05) 58%,
+    transparent 100%
+  );
+  height: 34%;
+  animation: rollbar 11s linear infinite;
+}
+
+@keyframes rollbar {
+  0% { transform: translateY(-120%); }
+  100% { transform: translateY(420%); }
+}
+
+@keyframes crt-flicker {
+  0%, 92%, 100% { opacity: 0.012; }
+  93% { opacity: 0.045; }
+  95% { opacity: 0.02; }
+  97% { opacity: 0.05; }
+}
+
+.crt-off {
+  transform: scaleY(0.006) scaleX(1.02);
+  filter: brightness(4);
+}
+
+.crt-wrap {
+  transform-origin: center;
+  transition: transform 0.1s ease-in, filter 0.1s ease-in;
+}
+
+/* хроматическая аберрация заголовков */
+.chroma {
+  text-shadow:
+    1px 0 0 rgba(255, 0, 255, 0.35),
+    -1px 0 0 rgba(0, 255, 255, 0.35),
+    0 0 8px rgba(255, 176, 0, 0.5);
+}
+
+.glow-amber { text-shadow: 0 0 6px rgba(255, 176, 0, 0.55); }
+.glow-green { text-shadow: 0 0 6px rgba(51, 255, 0, 0.5); }
+.glow-red { text-shadow: 0 0 6px rgba(255, 74, 74, 0.6); }
+
+/* ── мигания ── */
+
+@keyframes px-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.px-blink { animation: px-blink 1.06s steps(1) infinite; }
+
+.cursor-blink::after {
+  content: '▌';
+  animation: px-blink 1s steps(1) infinite;
+}
+
+@keyframes px-blink-fast {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.15; }
+}
+.px-blink-fast { animation: px-blink-fast 0.9s steps(1) infinite; }
+
+/* ── глитч-титры «В ЖОПЕ» ── */
+
+@keyframes glitch-jump {
+  0% { transform: translate(0, 0); clip-path: inset(0 0 0 0); }
+  15% { transform: translate(-3px, 1px); clip-path: inset(10% 0 60% 0); }
+  30% { transform: translate(3px, -1px); clip-path: inset(50% 0 10% 0); }
+  45% { transform: translate(0, 0); clip-path: inset(0 0 0 0); }
+  60% { transform: translate(-2px, 2px); clip-path: inset(30% 0 30% 0); }
+  75% { transform: translate(2px, -2px); clip-path: inset(70% 0 5% 0); }
+  100% { transform: translate(0, 0); clip-path: inset(0 0 0 0); }
+}
+.glitch-text {
+  animation: glitch-jump 0.9s steps(2) infinite;
+  text-shadow:
+    2px 0 0 rgba(255, 0, 255, 0.55),
+    -2px 0 0 rgba(0, 255, 255, 0.55),
+    0 0 14px rgba(255, 176, 0, 0.8);
+}
+
+/* ── трекинг-шум (VHS полоса) ── */
+
+@keyframes tracking-shift {
+  0% { background-position: 0 0; }
+  100% { background-position: -80px 0; }
+}
+.tracking-noise {
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.16) 0 2px,
+    transparent 2px 5px,
+    rgba(255, 176, 0, 0.12) 5px 7px,
+    transparent 7px 11px,
+    rgba(255, 255, 255, 0.1) 11px 13px,
+    transparent 13px 17px
+  );
+  animation: tracking-shift 0.5s steps(4) infinite;
+}
+
+/* ── бегущая строка магазина ── */
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+.marquee-track {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 9s linear infinite;
+}
+
+/* ── корпус: дерево / пластик ── */
+
+.wood-frame {
+  background:
+    repeating-linear-gradient(97deg, rgba(0, 0, 0, 0.16) 0 2px, transparent 2px 9px),
+    linear-gradient(115deg, #6d4b30 0%, var(--wood) 35%, #4a3226 75%, #3d291f 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(255, 220, 160, 0.18),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.55),
+    0 18px 50px rgba(0, 0, 0, 0.65);
+}
+
+.plastic-bezel {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.22), transparent 30%),
+    radial-gradient(circle at 85% 90%, rgba(120, 90, 40, 0.25), transparent 40%),
+    linear-gradient(160deg, #e8dcc6 0%, var(--plastic) 45%, #c4b8a0 100%);
+  box-shadow:
+    inset 0 2px 2px rgba(255, 255, 255, 0.35),
+    inset 0 -2px 4px rgba(90, 70, 40, 0.4);
+}
+
+/* царапины/потёртости на пластике */
+.wear-scratches {
+  background:
+    linear-gradient(115deg, transparent 48.6%, rgba(255, 255, 255, 0.28) 49%, transparent 49.4%),
+    linear-gradient(65deg, transparent 20.4%, rgba(0, 0, 0, 0.1) 20.8%, transparent 21.2%),
+    radial-gradient(circle at 78% 22%, rgba(255, 255, 255, 0.16) 0 1px, transparent 2px),
+    radial-gradient(circle at 30% 68%, rgba(255, 255, 255, 0.14) 0 1px, transparent 2px);
+}
+
+.panel-black {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, #26221e 0%, #191512 55%, #100d0b 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* решётка динамика */
+.grille {
+  background: repeating-linear-gradient(
+    90deg,
+    #0a0908 0 4px,
+    #2a2521 4px 6px,
+    #0a0908 6px 10px
+  );
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* винты на панели управления */
+.screw {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #6a625a 0%, #3a3530 55%, #14110f 100%);
+  box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+.screw::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 1px;
+  background: #0d0b0a;
+  transform: translate(-50%, -50%) rotate(38deg);
+}
+
+/* строка сообщения: лёгкая подсветка при наведении (признак тапабельности) */
+.msg-row { transition: background 0.08s steps(2); }
+.msg-row:hover { background: rgba(255, 176, 0, 0.03); }
+
+/* физическая кнопка ТВ */
+.tv-btn {
+  background: linear-gradient(180deg, #2e2a25 0%, #1c1916 60%, #12100e 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.14),
+    0 3px 0 #0a0908,
+    0 4px 6px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.06s steps(2), transform 0.06s steps(2);
+}
+.tv-btn:active,
+.tv-btn.pressed {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.85),
+    0 1px 0 #0a0908;
+}
+.tv-btn.pressed .tv-btn-icon {
+  color: var(--amber);
+  filter: drop-shadow(0 0 5px rgba(255, 176, 0, 0.9));
+}
+.tv-btn-icon { color: #6b6258; transition: color 0.08s, filter 0.08s; }
+
+/* крутилка */
+.knob {
+  background:
+    radial-gradient(circle at 35% 30%, #4a443c 0%, #26221e 45%, #14110f 100%);
+  box-shadow:
+    0 0 0 3px #0d0b0a,
+    0 0 0 5px #55504a,
+    0 0 0 6px #0d0b0a,
+    0 5px 10px rgba(0, 0, 0, 0.7),
+    inset 0 2px 3px rgba(255, 255, 255, 0.16);
+  transition: transform 0.16s steps(3, end);
+}
+
+/* светодиод */
+.led {
+  box-shadow: 0 0 6px 1px currentColor;
+}
+
+/* стикер на корпусе */
+.body-sticker {
+  background: linear-gradient(180deg, #ffd23f 0%, #f0b429 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ── лента сообщений ── */
+
+.pixel-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.pixel-scroll::-webkit-scrollbar-track { background: #1c0e00; }
+.pixel-scroll::-webkit-scrollbar-thumb { background: #6b4a00; border: 1px solid #2d1600; }
+.pixel-scroll::-webkit-scrollbar-thumb:hover { background: #8a6a10; }
+.pixel-scroll { scrollbar-width: thin; scrollbar-color: #6b4a00 #1c0e00; }
+
+.px-input {
+  background: transparent;
+  border: 2px solid #6b4a00;
+  color: var(--amber);
+  caret-color: var(--amber);
+  outline: none;
+}
+.px-input::placeholder { color: #8a6f3f; }
+.px-input:focus { border-color: var(--amber); box-shadow: 0 0 10px rgba(255, 176, 0, 0.25); }
+
+.msg-line {
+  border-bottom: 1px dashed rgba(255, 176, 0, 0.22);
+}
+
+/* кадры плёнки в личке */
+.film-frame {
+  background: #1c1206;
+  border: 1px solid rgba(255, 176, 0, 0.5);
+}
+.film-frame.mine { border-color: rgba(255, 176, 0, 0.9); box-shadow: 0 0 6px rgba(255, 176, 0, 0.2); }
+.film-frame.theirs { border-color: rgba(51, 255, 0, 0.55); }
+
+.perf {
+  background-image: radial-gradient(circle, #241100 0 1.5px, transparent 1.6px);
+  background-size: 100% 8px;
+}
+
+/* пустые кадры плёнки профиля */
+.film-empty {
+  border: 2px dashed #6b4a00;
+}
+
+/* цветной текст сообщения (упоминания) */
+.mention { color: var(--amber); text-shadow: 0 0 6px rgba(255, 176, 0, 0.5); }
+
+/* ужимаем emoji под пиксель-стиль */
+.emoji-px {
+  font-family: 'Press Start 2P', monospace;
+  filter: saturate(0.85) contrast(1.05);
+}
+
+/* фон вокруг телевизора (кухня ночью) */
+.kitchen-bg {
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(255, 170, 60, 0.1), transparent 55%),
+    radial-gradient(ellipse at 50% 115%, rgba(60, 30, 10, 0.5), transparent 60%),
+    linear-gradient(180deg, #17130e 0%, #0f0c09 60%, #0a0806 100%);
+}
+
+/* печатает… — три точки записывающей кассеты */
+@keyframes px-blink-dot {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 1; }
+}
+.px-blink-dot { animation: px-blink-dot 0.9s ease-in-out infinite; }
+
+/* ── вспышка кадра при переходе по цитате (@ответ в эфире) ── */
+
+@keyframes px-flash-bg {
+  0% { background-color: rgba(255, 176, 0, 0.28); }
+  100% { background-color: transparent; }
+}
+.px-flash { animation: px-flash-bg 950ms ease-out; }
+
+/* ── мем-эфир: мгновенная подмена кадра при свайпе ── */
+
+/* улетающая карточка: стартует с текущей позиции свайпа и уходит за край экрана */
+@keyframes s1-fly-out {
+  from { transform: translateX(var(--fx, 0px)) rotate(var(--fr, 0deg)); }
+  to { transform: translateX(var(--tx, calc(50vw + 140px))) rotate(var(--tr, 14deg)); }
+}
+
+/* новая карточка «поднимается» из-под стопки в центр (вид под-карточки → обычный) */
+@keyframes s1-card-in {
+  from { transform: rotate(-1.4deg) scale(0.965); filter: brightness(0.62) saturate(0.85); }
+  55% { filter: brightness(0.8) saturate(0.95); }
+  to { transform: rotate(0deg) scale(1); filter: brightness(1) saturate(1); }
+}
+
+/* ── заставка: мемы, проявляющиеся из шума ─────────────────── */
+@keyframes boot-meme {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.62) rotate(var(--boot-rot, 0deg));
+    filter: blur(3px) contrast(1.4);
+  }
+  18% {
+    opacity: 0.95;
+  }
+  68% {
+    opacity: 0.95;
+    transform: translateY(-5px) scale(1) rotate(var(--boot-rot, 0deg));
+    filter: blur(0) contrast(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-24px) scale(1.05) rotate(var(--boot-rot, 0deg));
+    filter: blur(1px) contrast(1.1);
+  }
+}
+
+.boot-meme {
+  animation: boot-meme 3600ms ease-in-out both;
+  transform-origin: center;
+}
