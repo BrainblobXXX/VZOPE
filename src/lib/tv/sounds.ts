@@ -196,7 +196,7 @@ let currentTrack: string | null = null
 let musicFade: number | null = null
 let roomNoise: { source: AudioBufferSourceNode; gain: GainNode } | null = null
 
-const MUSIC_VOLUME = 0.018
+const MUSIC_VOLUME = 0.020
 const ROOM_NOISE_VOLUME = 0.006
 
 function shuffle<T>(items: T[]): T[] {
