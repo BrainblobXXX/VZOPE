@@ -7,13 +7,13 @@ import type { S1Meme } from './data'
 type Phase = 'black' | 'snow' | 'title' | 'tune'
 
 const MEME_SLOTS = [
-  { left: '6%', top: '14%', size: 84, rotate: -12, delay: 600 },
-  { left: '67%', top: '10%', size: 72, rotate: 10, delay: 800 },
-  { left: '8%', top: '58%', size: 76, rotate: 8, delay: 1000 },
-  { left: '67%', top: '60%', size: 84, rotate: -8, delay: 1200 },
-  { left: '2%', top: '35%', size: 62, rotate: 14, delay: 1400 },
-  { left: '79%', top: '34%', size: 64, rotate: -14, delay: 1600 },
-  { left: '38%', top: '3%', size: 58, rotate: 5, delay: 1800 },
+  { left: '6%', top: '17%', size: 84, rotate: -12, delay: 600 },
+  { left: '67%', top: '13%', size: 72, rotate: 10, delay: 800 },
+  { left: '8%', top: '61%', size: 76, rotate: 8, delay: 1000 },
+  { left: '67%', top: '63%', size: 84, rotate: -8, delay: 1200 },
+  { left: '2%', top: '38%', size: 62, rotate: 14, delay: 1400 },
+  { left: '79%', top: '37%', size: 64, rotate: -14, delay: 1600 },
+  { left: '38%', top: '6%', size: 58, rotate: 5, delay: 1800 },
 ]
 
 export default function Stage1Boot({ memes, onDone }: { memes: S1Meme[]; onDone: () => void }) {
