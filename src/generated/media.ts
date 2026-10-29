@@ -472,3 +472,11 @@ export const AVATAR_MANIFEST: Record<string, string> = {
   "u7": "/avatars/u7.jpg",
   "u8": "/avatars/u8.jpg"
 }
+
+export const AUDIO_MANIFEST: string[] = [
+  "/audio/Dixy.mp3",
+  "/audio/Ilych.mp3",
+  "/audio/Kotiki.mp3",
+  "/audio/Ogurets.mp3",
+  "/audio/Zopa.mp3"
+]

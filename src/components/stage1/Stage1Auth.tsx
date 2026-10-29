@@ -10,9 +10,11 @@ type Gender = 'М' | 'Ж'
 export default function Stage1Auth({
   onRegister,
   onLogin,
+  onStartAudio,
 }: {
   onRegister: (nick: string, gender: Gender, age: number, password: string) => Promise<string | null>
   onLogin: (nick: string, password: string) => Promise<string | null>
+  onStartAudio?: () => void
 }) {
   const [tab, setTab] = useState<Tab>('register')
   const [nick, setNick] = useState('')
@@ -53,6 +55,7 @@ export default function Stage1Auth({
       return
     }
 
+    onStartAudio?.()
     setSubmitting(true)
     try {
       const result = tab === 'register'

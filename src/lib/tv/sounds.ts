@@ -1,4 +1,6 @@
 // Синтезированные звуки «найденного телевизора» (WebAudio, без ассетов)
+import { AUDIO_MANIFEST } from '@/generated/media'
+
 let ctx: AudioContext | null = null
 let enabled = true
 
@@ -18,7 +20,10 @@ function ac(): AudioContext | null {
 
 export function setSoundEnabled(v: boolean) {
   enabled = v
-  if (!v) stopHum()
+  if (!v) {
+    stopHum()
+    stopSoundtrack()
+  }
 }
 export function isSoundEnabled() {
   return enabled
@@ -180,4 +185,179 @@ export function stopHum() {
     /* noop */
   }
   humNodes = null
+}
+
+// ── фоновое радио: плейлист вперемешку + тихий шум комнаты ──
+
+let soundtrack: HTMLAudioElement | null = null
+let soundtrackActive = false
+let musicQueue: string[] = []
+let currentTrack: string | null = null
+let musicFade: number | null = null
+let roomNoise: { source: AudioBufferSourceNode; gain: GainNode } | null = null
+
+const MUSIC_VOLUME = 0.085
+const ROOM_NOISE_VOLUME = 0.0065
+
+function shuffle<T>(items: T[]): T[] {
+  const next = [...items]
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[next[i], next[j]] = [next[j], next[i]]
+  }
+  return next
+}
+
+function fillMusicQueue() {
+  // не ставим только что сыгранный трек первым в новом круге
+  const pool = AUDIO_MANIFEST.filter((track) => track !== currentTrack)
+  musicQueue = shuffle(pool.length > 0 ? pool : [...AUDIO_MANIFEST])
+}
+
+function clearMusicFade() {
+  if (musicFade === null) return
+  window.clearInterval(musicFade)
+  musicFade = null
+}
+
+function fadeMusic(to: number, ms = 1400) {
+  if (!soundtrack) return
+  clearMusicFade()
+
+  const from = soundtrack.volume
+  const steps = Math.max(1, Math.floor(ms / 40))
+  let step = 0
+
+  musicFade = window.setInterval(() => {
+    step += 1
+    if (!soundtrack) return
+    const t = Math.min(1, step / steps)
+    soundtrack.volume = from + (to - from) * t
+    if (t >= 1) clearMusicFade()
+  }, 40)
+}
+
+function startRoomNoise() {
+  if (!enabled) return
+  const c = ac()
+  if (!c || roomNoise) return
+
+  const source = c.createBufferSource()
+  source.buffer = noiseBuffer(c, 2)
+  source.loop = true
+
+  const filter = c.createBiquadFilter()
+  filter.type = 'bandpass'
+  filter.frequency.value = 1800
+  filter.Q.value = 0.55
+
+  const gain = c.createGain()
+  gain.gain.value = ROOM_NOISE_VOLUME
+
+  source.connect(filter).connect(gain).connect(c.destination)
+  source.start()
+  roomNoise = { source, gain }
+}
+
+function stopRoomNoise() {
+  if (!roomNoise) return
+  try {
+    roomNoise.source.stop()
+    roomNoise.source.disconnect()
+    roomNoise.gain.disconnect()
+  } catch {
+    /* уже остановлен */
+  }
+  roomNoise = null
+}
+
+function playNextTrack() {
+  if (!soundtrackActive || !soundtrack) return
+
+  if (musicQueue.length === 0) fillMusicQueue()
+  const next = musicQueue.shift()
+  if (!next) return
+
+  currentTrack = next
+  soundtrack.src = next
+  soundtrack.volume = 0
+  soundtrack.load()
+
+  const result = soundtrack.play()
+  if (result) {
+    result
+      .then(() => fadeMusic(MUSIC_VOLUME, 1400))
+      .catch(() => {
+        if (!soundtrackActive) return
+        // автоплей заблокирован или файл не открылся — попробуем следующий
+        window.setTimeout(() => {
+          if (soundtrackActive) playNextTrack()
+        }, 900)
+      })
+  }
+}
+
+export function startSoundtrack() {
+  if (!enabled || typeof window === 'undefined' || AUDIO_MANIFEST.length === 0) return
+
+  if (!soundtrack) {
+    soundtrack = new Audio()
+    soundtrack.preload = 'auto'
+    soundtrack.loop = false
+    soundtrack.volume = 0
+    soundtrack.addEventListener('ended', () => {
+      if (soundtrackActive) playNextTrack()
+    })
+    soundtrack.addEventListener('error', () => {
+      if (!soundtrackActive) return
+      window.setTimeout(() => {
+        if (soundtrackActive) playNextTrack()
+      }, 900)
+    })
+  }
+
+  soundtrackActive = true
+  startHum()
+  startRoomNoise()
+
+  if (!soundtrack.paused) return
+  if (!soundtrack.src) {
+    playNextTrack()
+    return
+  }
+
+  soundtrack.play().then(() => fadeMusic(MUSIC_VOLUME, 1200)).catch(() => {
+    // повторная попытка после следующего касания
+    const retry = () => {
+      if (soundtrackActive) startSoundtrack()
+    }
+    window.addEventListener('pointerdown', retry, { once: true })
+    window.addEventListener('keydown', retry, { once: true })
+  })
+}
+
+export function stopSoundtrack() {
+  soundtrackActive = false
+  clearMusicFade()
+  stopRoomNoise()
+  musicQueue = []
+  currentTrack = null
+
+  if (!soundtrack) return
+  soundtrack.pause()
+  soundtrack.removeAttribute('src')
+  soundtrack.load()
+  soundtrack = null
+}
+
+export function pauseSoundtrack() {
+  clearMusicFade()
+  soundtrack?.pause()
+  stopRoomNoise()
+}
+
+export function resumeSoundtrack() {
+  if (!enabled || !soundtrackActive || !soundtrack) return
+  startRoomNoise()
+  soundtrack.play().then(() => fadeMusic(MUSIC_VOLUME, 900)).catch(() => {})
 }

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Banner, Modal, PxButton } from '../tv/ui'
 import SnowOverlay from '../tv/SnowOverlay'
 import PhotoAvatar from './PhotoAvatar'
-import { playBeep, playCassette, playClick, playCoin, playError, playMatch, playSend, playSwipe, playSwitch, playTear, setSoundEnabled, startHum, stopHum } from '../../lib/tv/sounds'
+import { pauseSoundtrack, playBeep, playCassette, playClick, playCoin, playError, playMatch, playSend, playSwipe, playSwitch, playTear, resumeSoundtrack, setSoundEnabled, startHum, startSoundtrack, stopHum, stopSoundtrack } from '../../lib/tv/sounds'
 import Stage1Shell from './Stage1Shell'
 import Stage1MatchModal from './Stage1MatchModal'
 import Stage1Feed from './screens/Stage1Feed'
@@ -246,6 +246,16 @@ export default function Stage1App() {
     }
   }, [])
 
+  // не играем радио, когда вкладка/WebView свернуты
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.hidden) pauseSoundtrack()
+      else if (soundOn) resumeSoundtrack()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [soundOn])
+
   const transitioning = useRef(false)
   const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const nextMatchAtRef = useRef<number | null>(null)
@@ -373,6 +383,7 @@ export default function Stage1App() {
       // не критично
     }
     setSettingsOpen(false)
+    stopSoundtrack()
     setPhase('auth')
   }
 
@@ -597,8 +608,13 @@ export default function Stage1App() {
     const next = !soundOn
     setSoundOn(next)
     setSoundEnabled(next)
-    if (next) startHum()
-    else stopHum()
+    if (next) {
+      startHum()
+      startSoundtrack()
+    } else {
+      stopHum()
+      stopSoundtrack()
+    }
   }
 
   // ── фоновые входящие заявки от зрителей ─────────────────────
