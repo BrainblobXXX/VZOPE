@@ -252,8 +252,19 @@ export default function Stage1App() {
       if (document.hidden) pauseSoundtrack()
       else if (soundOn) resumeSoundtrack()
     }
+    const onPageHide = () => pauseSoundtrack()
+    const onPageShow = () => {
+      if (!document.hidden && soundOn) resumeSoundtrack()
+    }
+
     document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
+    window.addEventListener('pagehide', onPageHide)
+    window.addEventListener('pageshow', onPageShow)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('pagehide', onPageHide)
+      window.removeEventListener('pageshow', onPageShow)
+    }
   }, [soundOn])
 
   const transitioning = useRef(false)

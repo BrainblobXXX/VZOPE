@@ -147,7 +147,7 @@ export function startHum() {
   if (!c) return
   try {
     const gain = c.createGain()
-    gain.gain.value = 0.012
+    gain.gain.value = 0.005
     // базовый тон 55 Гц (трансформатор)
     const osc = c.createOscillator()
     osc.type = 'sine'
@@ -155,9 +155,9 @@ export function startHum() {
     // лёгкое «дыхание» громкости через LFO
     const lfo = c.createOscillator()
     lfo.type = 'sine'
-    lfo.frequency.value = 0.27
+    lfo.frequency.value = 0.17
     const lfoGain = c.createGain()
-    lfoGain.gain.value = 0.005
+    lfoGain.gain.value = 0.0015
     lfo.connect(lfoGain).connect(gain.gain)
     osc.connect(gain).connect(c.destination)
     osc.start()
@@ -411,9 +411,11 @@ export function pauseSoundtrack() {
   clearMusicFade()
   soundtrack?.pause()
   stopRoomNoise()
+  stopHum()
 }
 
 export function resumeSoundtrack() {
   if (!enabled || !soundtrackActive || !soundtrack) return
+  startHum()
   requestPlay()
 }
