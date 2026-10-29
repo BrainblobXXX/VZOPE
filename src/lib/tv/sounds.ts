@@ -195,9 +195,11 @@ let musicQueue: string[] = []
 let currentTrack: string | null = null
 let musicFade: number | null = null
 let roomNoise: { source: AudioBufferSourceNode; gain: GainNode } | null = null
+let unlockCleanup: (() => void) | null = null
+let failedTracks = 0
 
-const MUSIC_VOLUME = 0.012
-const ROOM_NOISE_VOLUME = 0.018
+const MUSIC_VOLUME = 0.017
+const ROOM_NOISE_VOLUME = 0.005
 
 function shuffle<T>(items: T[]): T[] {
   const next = [...items]
@@ -271,6 +273,61 @@ function stopRoomNoise() {
   roomNoise = null
 }
 
+function clearAudioUnlock() {
+  if (!unlockCleanup) return
+  unlockCleanup()
+  unlockCleanup = null
+}
+
+function armAudioUnlock() {
+  if (unlockCleanup || typeof window === 'undefined') return
+
+  const unlock = () => {
+    clearAudioUnlock()
+    if (soundtrackActive) requestPlay()
+  }
+
+  unlockCleanup = () => {
+    window.removeEventListener('pointerdown', unlock)
+    window.removeEventListener('touchstart', unlock)
+    window.removeEventListener('keydown', unlock)
+  }
+
+  window.addEventListener('pointerdown', unlock, { once: true, passive: true })
+  window.addEventListener('touchstart', unlock, { once: true, passive: true })
+  window.addEventListener('keydown', unlock, { once: true })
+}
+
+/**
+ * Единственная точка запуска/возобновления HTMLAudio.
+ * Если браузер заблокировал play(), не крутим бесконечный retry,
+ * а ждём следующего жеста пользователя.
+ */
+function requestPlay() {
+  if (!soundtrack || !soundtrackActive) return
+
+  const result = soundtrack.play()
+  if (!result) {
+    startRoomNoise()
+    fadeMusic(MUSIC_VOLUME, 1400)
+    return
+  }
+
+  result
+    .then(() => {
+      clearAudioUnlock()
+      failedTracks = 0
+      startRoomNoise()
+      fadeMusic(MUSIC_VOLUME, 1400)
+    })
+    .catch(() => {
+      // Шум не должен играть отдельно от музыки: иначе получается
+      // «радио шипит, а трека нет».
+      stopRoomNoise()
+      armAudioUnlock()
+    })
+}
+
 function playNextTrack() {
   if (!soundtrackActive || !soundtrack) return
 
@@ -282,19 +339,7 @@ function playNextTrack() {
   soundtrack.src = next
   soundtrack.volume = 0
   soundtrack.load()
-
-  const result = soundtrack.play()
-  if (result) {
-    result
-      .then(() => fadeMusic(MUSIC_VOLUME, 1400))
-      .catch(() => {
-        if (!soundtrackActive) return
-        // автоплей заблокирован или файл не открылся — попробуем следующий
-        window.setTimeout(() => {
-          if (soundtrackActive) playNextTrack()
-        }, 900)
-      })
-  }
+  requestPlay()
 }
 
 export function startSoundtrack() {
@@ -305,43 +350,55 @@ export function startSoundtrack() {
     soundtrack.preload = 'auto'
     soundtrack.loop = false
     soundtrack.volume = 0
+
     soundtrack.addEventListener('ended', () => {
       if (soundtrackActive) playNextTrack()
     })
+
     soundtrack.addEventListener('error', () => {
       if (!soundtrackActive) return
+      failedTracks += 1
+
+      // Если все треки отдают 404/не поддерживаются — не зацикливаемся.
+      if (failedTracks >= AUDIO_MANIFEST.length) {
+        soundtrackActive = false
+        clearMusicFade()
+        stopRoomNoise()
+        console.warn('[soundtrack] all tracks failed to load')
+        return
+      }
+
       window.setTimeout(() => {
         if (soundtrackActive) playNextTrack()
-      }, 900)
+      }, 800)
     })
   }
 
   soundtrackActive = true
   startHum()
-  startRoomNoise()
 
-  if (!soundtrack.paused) return
+  if (!soundtrack.paused) {
+    startRoomNoise()
+    return
+  }
+
   if (!soundtrack.src) {
     playNextTrack()
     return
   }
 
-  soundtrack.play().then(() => fadeMusic(MUSIC_VOLUME, 1200)).catch(() => {
-    // повторная попытка после следующего касания
-    const retry = () => {
-      if (soundtrackActive) startSoundtrack()
-    }
-    window.addEventListener('pointerdown', retry, { once: true })
-    window.addEventListener('keydown', retry, { once: true })
-  })
+  requestPlay()
 }
 
 export function stopSoundtrack() {
   soundtrackActive = false
   clearMusicFade()
+  clearAudioUnlock()
   stopRoomNoise()
+  stopHum()
   musicQueue = []
   currentTrack = null
+  failedTracks = 0
 
   if (!soundtrack) return
   soundtrack.pause()
@@ -358,6 +415,5 @@ export function pauseSoundtrack() {
 
 export function resumeSoundtrack() {
   if (!enabled || !soundtrackActive || !soundtrack) return
-  startRoomNoise()
-  soundtrack.play().then(() => fadeMusic(MUSIC_VOLUME, 900)).catch(() => {})
+  requestPlay()
 }
