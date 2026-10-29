@@ -54,8 +54,8 @@ export interface S1MyMatch {
 
 export const ME: S1User = {
   id: 'me',
-  nick: 'ТЕЛЕПУЗИК',
-  seed: 'telepuzik',
+  nick: 'ЖОПА',
+  seed: 'zhopa',
   gender: 'М',
   age: 27,
   online: true,

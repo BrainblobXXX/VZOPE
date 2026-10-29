@@ -41,7 +41,7 @@ export default function Stage1Profile({
   onAcceptRequest: (userId: string) => void
   onDeclineRequest: (userId: string) => void
   onToast: (text: string, tone?: 'amber' | 'red' | 'green') => void
-  onEditProfile: (status: string, about: string) => void
+  onEditProfile: (nick: string, status: string, about: string) => string | null
   onOpenSettings: () => void
   onGoShop?: () => void
 }) {
@@ -49,8 +49,10 @@ export default function Stage1Profile({
   const [editOpen, setEditOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<S1Cassette | null>(null)
   const [pickedUser, setPickedUser] = useState<S1User | null>(null)
+  const [draftNick, setDraftNick] = useState(me.nick)
   const [draftStatus, setDraftStatus] = useState(myStatus)
   const [draftAbout, setDraftAbout] = useState(myAbout)
+  const [editError, setEditError] = useState('')
 
   const onFile = (file?: File) => {
     if (!file) return
@@ -121,7 +123,7 @@ export default function Stage1Profile({
               <p className="font-pixel mt-1.5 max-w-[195px] truncate text-[6.5px] text-[#33FF00]">● {myStatus}</p>
             </div>
           </div>
-          <PxButton variant="ghost" className="px-2 py-1 text-[7px]" onClick={() => { setDraftStatus(myStatus); setDraftAbout(myAbout); setEditOpen(true) }}>
+          <PxButton variant="ghost" className="px-2 py-1 text-[7px]" onClick={() => { setDraftNick(me.nick); setDraftStatus(myStatus); setDraftAbout(myAbout); setEditError(''); setEditOpen(true) }}>
             ✎ РЕД.
           </PxButton>
         </div>
@@ -279,6 +281,22 @@ export default function Stage1Profile({
         <Modal title="РЕД. ПРОФИЛЯ" onClose={() => setEditOpen(false)} wide>
           <div className="flex flex-col gap-3">
             <label className="block">
+              <span className="font-pixel mb-1 block text-[5px] text-[#8a6f3f]">НИК (3–16 СИМВОЛОВ)</span>
+              <input
+                value={draftNick}
+                maxLength={16}
+                onChange={(e) => setDraftNick(e.target.value.toUpperCase())}
+                className="font-pixel w-full border-2 border-[#5a3a00] bg-[#140c04] px-2 py-2 text-[7px] text-[#e8d9b0] focus:border-[#FFB000] focus:outline-none"
+                aria-label="Ник"
+                placeholder="КАК ТЕБЯ ЗВАТЬ?"
+              />
+            </label>
+            {editError && (
+              <p className="font-pixel border border-[#FF4A4A]/60 bg-[#2a0e0a] px-2 py-1.5 text-[6px] leading-relaxed text-[#FF4A4A]" role="alert">
+                {editError}
+              </p>
+            )}
+            <label className="block">
               <span className="font-pixel mb-1 block text-[5px] text-[#8a6f3f]">СТАТУС (ДО {STATUS_MAX} СИМВОЛОВ)</span>
               <input
                 value={draftStatus}
@@ -306,9 +324,18 @@ export default function Stage1Profile({
               <PxButton
                 variant="green"
                 className="flex-1"
-                disabled={draftStatus.trim().length === 0 || draftAbout.trim().length === 0}
+                disabled={draftNick.trim().length === 0 || draftStatus.trim().length === 0 || draftAbout.trim().length === 0}
                 onClick={() => {
-                  onEditProfile(draftStatus.trim().slice(0, STATUS_MAX), draftAbout.trim().slice(0, ABOUT_MAX))
+                  const error = onEditProfile(
+                    draftNick.trim(),
+                    draftStatus.trim().slice(0, STATUS_MAX),
+                    draftAbout.trim().slice(0, ABOUT_MAX),
+                  )
+                  if (error) {
+                    setEditError(error)
+                    return
+                  }
+                  setEditError('')
                   setEditOpen(false)
                 }}
               >

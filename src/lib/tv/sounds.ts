@@ -199,7 +199,7 @@ let unlockCleanup: (() => void) | null = null
 let failedTracks = 0
 
 const MUSIC_VOLUME = 0.017
-const ROOM_NOISE_VOLUME = 0.005
+const ROOM_NOISE_VOLUME = 0.003
 
 function shuffle<T>(items: T[]): T[] {
   const next = [...items]

@@ -14,10 +14,9 @@ import Stage1Channel from './screens/Stage1Channel'
 import Stage1DeadChannel from './screens/Stage1DeadChannel'
 import Stage1Shop from './screens/Stage1Shop'
 import Stage1Cassette from './screens/Stage1Cassette'
-import Stage1Auth from './Stage1Auth'
 import Stage1Boot from './Stage1Boot'
 import UserModal from './UserModal'
-import { CASSETTE_MESSAGES, GENERIC_REPLIES, MATCHES, ME, MEMES, REPLIES, SHOP_ITEMS, START_COINS, VIEWERS, type S1Account, type S1ChatMessage, type S1Cassette, type S1Match, type S1Meme, type S1MyMatch, type S1Request, type S1Screen, type S1ShopItem, type S1User } from './data'
+import { CASSETTE_MESSAGES, GENERIC_REPLIES, MATCHES, ME, MEMES, REPLIES, SHOP_ITEMS, START_COINS, VIEWERS, type S1ChatMessage, type S1Cassette, type S1Match, type S1Meme, type S1MyMatch, type S1Request, type S1Screen, type S1ShopItem, type S1User } from './data'
 
 const STATE_KEY = 'stage1:state:v1'
 const ACCOUNT_KEY = 'stage1:account:v1'
@@ -25,29 +24,7 @@ const SESSION_KEY = 'stage1:session:v1'
 const BOOTED_KEY = 'stage1:booted:v1'
 const DEFAULT_ABOUT = '«ЛЮБЛЮ ПЕЛЬМЕНИ, ЭЛТ И КОГДА ПОМЕХИ СКЛАДЫВАЮТСЯ В ЧЬЁ-ТО ЛИЦО. ПИШУ ОТСЮДА.»'
 
-type Phase = 'loading' | 'auth' | 'boot' | 'app'
-
-async function hashPassword(password: string) {
-  const data = new TextEncoder().encode(password)
-  const digest = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
-interface SavedState {
-  coins: number
-  owned: string[]
-  unread: Record<string, number>
-  cassetteMessages: Record<string, S1ChatMessage[]>
-  cassettes: S1Cassette[]
-  requests: S1Request[]
-  likes: number
-  matchIndex: number
-  status: string
-  about: string
-  myMatches: S1MyMatch[]
-  matchesSeen: number
-  myExports: S1Meme[]
-}
+type Phase = 'boot' | 'app'
 
 function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -81,8 +58,7 @@ function pickReply(userId: string, lastRef?: Record<string, string>) {
 }
 
 export default function Stage1App() {
-  const [phase, setPhase] = useState<Phase>('loading')
-  const [account, setAccount] = useState<S1Account | null>(null)
+  const [phase, setPhase] = useState<Phase>('boot')
   const [me, setMe] = useState<S1User>(ME)
   const [screen, setScreen] = useState<S1Screen>('feed')
   const [feedIndex, setFeedIndex] = useState(0)
@@ -142,89 +118,6 @@ export default function Stage1App() {
     }
   }, [])
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        const saved = localStorage.getItem('stage1:my-avatar')
-        if (saved) setMyAvatar(saved)
-        // персистентность мокапа: коины, инвентарь, плёнки кассет, заявки
-        const raw = localStorage.getItem(STATE_KEY)
-        if (raw) {
-          const s = JSON.parse(raw) as Partial<SavedState>
-          if (typeof s.coins === 'number') setCoins(s.coins)
-          if (Array.isArray(s.owned)) setOwned(s.owned)
-          if (s.unread && typeof s.unread === 'object') setUnread(s.unread)
-          if (s.cassetteMessages && typeof s.cassetteMessages === 'object') setCassetteMessages(s.cassetteMessages)
-          if (Array.isArray(s.cassettes) && s.cassettes.length > 0) setCassettes(s.cassettes)
-          if (Array.isArray(s.requests)) setRequests(s.requests)
-          if (typeof s.likes === 'number') setLikes(s.likes)
-          if (typeof s.matchIndex === 'number') setMatchIndex(s.matchIndex)
-          if (typeof s.status === 'string' && s.status) setMyStatus(s.status)
-          if (typeof s.about === 'string' && s.about) setMyAbout(s.about)
-          if (Array.isArray(s.myMatches)) setMyMatches(s.myMatches)
-          if (typeof s.matchesSeen === 'number') setMatchesSeen(s.matchesSeen)
-          if (Array.isArray(s.myExports)) setMyExports(s.myExports)
-        }
-      } catch {
-        // битое состояние — начинаем с чистой кассеты
-      }
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [])
-
-  // первый запуск: локальный аккаунт, сессия и заставка
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        const rawAccount = localStorage.getItem(ACCOUNT_KEY)
-        const savedAccount = rawAccount ? (JSON.parse(rawAccount) as S1Account) : null
-
-        if (savedAccount) {
-          setAccount(savedAccount)
-          setMe((prev) => ({
-            ...prev,
-            nick: savedAccount.nick,
-            gender: savedAccount.gender,
-            age: savedAccount.age,
-          }))
-        }
-
-        // сессия не переживает перезапуск: каждый запуск начинается с регистрации/входа
-        setPhase('auth')
-      } catch {
-        setPhase('auth')
-      }
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [])
-
-  // сохранение мокапа при каждом изменении
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      try {
-        const state: SavedState = {
-          coins,
-          owned,
-          unread,
-          cassetteMessages,
-          cassettes,
-          requests,
-          likes,
-          matchIndex,
-          status: myStatus,
-          about: myAbout,
-          myMatches,
-          matchesSeen,
-          myExports,
-        }
-        localStorage.setItem(STATE_KEY, JSON.stringify(state))
-      } catch {
-        // не влезло — не критично, мокап живёт в сессии
-      }
-    }, 200)
-    return () => window.clearTimeout(timer)
-  }, [coins, owned, unread, cassetteMessages, cassettes, requests, myStatus, myAbout, likes, matchIndex, myMatches, matchesSeen, myExports])
-
   // включение телевизора: вспышка снега на старте
   useEffect(() => {
     const start = window.setTimeout(() => setSnow(true), 0)
@@ -237,11 +130,16 @@ export default function Stage1App() {
 
   // фоновый гул ЭЛТ — после первого касания (autoplay-политика)
   useEffect(() => {
-    const kick = () => startHum()
+    const kick = () => {
+      startHum()
+      startSoundtrack()
+    }
     window.addEventListener('pointerdown', kick, { once: true })
+    window.addEventListener('touchstart', kick, { once: true, passive: true })
     window.addEventListener('keydown', kick, { once: true })
     return () => {
       window.removeEventListener('pointerdown', kick)
+      window.removeEventListener('touchstart', kick)
       window.removeEventListener('keydown', kick)
     }
   }, [])
@@ -303,100 +201,22 @@ export default function Stage1App() {
 
   const onAvatarUpload = (dataUrl: string) => {
     setMyAvatar(dataUrl)
-    try {
-      localStorage.setItem('stage1:my-avatar', dataUrl)
-    } catch {
-      // Если не влезло в localStorage — превью всё равно останется в сессии.
-    }
     showBanner('АВАТАР ОБНОВЛЕН', 'green')
   }
 
-  const registerAccount = async (nick: string, gender: 'М' | 'Ж', age: number, password: string) => {
+  const renameMe = (nick: string): string | null => {
     const normalized = nick.trim().toUpperCase()
-    if (account?.nick === normalized) return 'ЭТОТ НИК УЖЕ ЗАРЕГИСТРИРОВАН'
-    if (normalized === ME.nick || VIEWERS.some((u) => u.nick === normalized)) return 'ЭТОТ НИК УЖЕ В ЭФИРЕ'
-
-    const nextAccount: S1Account = {
-      nick: normalized,
-      gender,
-      age,
-      passwordHash: await hashPassword(password),
+    if (normalized.length < 3 || normalized.length > 16 || !/^[A-ZА-ЯЁ0-9]+$/.test(normalized)) {
+      return 'НИК: 3–16 СИМВОЛОВ, БУКВЫ И ЦИФРЫ, БЕЗ ПРОБЕЛОВ'
     }
-
-    try {
-      localStorage.setItem(ACCOUNT_KEY, JSON.stringify(nextAccount))
-      localStorage.removeItem(SESSION_KEY)
-      localStorage.removeItem(STATE_KEY)
-      localStorage.removeItem('stage1:my-avatar')
-      localStorage.removeItem(BOOTED_KEY)
-    } catch {
-      // localStorage может быть недоступен — мокап всё равно откроется
+    if (normalized !== me.nick && VIEWERS.some((u) => u.nick === normalized)) {
+      return 'ЭТОТ НИК УЖЕ В ЭФИРЕ'
     }
-
-    setAccount(nextAccount)
-    setMe((prev) => ({ ...prev, nick: normalized, gender, age }))
-    setCoins(START_COINS)
-    setOwned([])
-    setUnread({})
-    setCassetteMessages(CASSETTE_MESSAGES)
-    setCassettes([])
-    setRequests([])
-    setLikes(0)
-    setMatchIndex(0)
-    setMyMatches([])
-    setMatchesSeen(0)
-    setMyExports([])
-    setMyAvatar(undefined)
-    setMyStatus(ME.status)
-    setMyAbout(DEFAULT_ABOUT)
-    setActiveMatch(null)
-    setCassetteUserId(null)
-    setScreen('feed')
-    setFeedIndex(0)
-    setPhase(localStorage.getItem(BOOTED_KEY) === '1' ? 'app' : 'boot')
+    setMe((prev) => ({ ...prev, nick: normalized }))
     return null
   }
 
-  const loginAccount = async (nick: string, password: string) => {
-    const normalized = nick.trim().toUpperCase()
-    if (!account) return 'АККАУНТ НЕ НАЙДЕН. ЗАРЕГИСТРИРУЙСЯ.'
-    if (account.nick !== normalized) return 'НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'
-    if ((await hashPassword(password)) !== account.passwordHash) return 'НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'
-
-    try {
-      localStorage.removeItem(SESSION_KEY)
-    } catch {
-      // мокап живёт в памяти
-    }
-    setMe((prev) => ({ ...prev, nick: account.nick, gender: account.gender, age: account.age }))
-    setScreen('feed')
-    setFeedIndex(0)
-    setChannel(1)
-    setActiveMatch(null)
-    setCassetteUserId(null)
-    setPhase(localStorage.getItem(BOOTED_KEY) === '1' ? 'app' : 'boot')
-    return null
-  }
-
-  const finishBoot = () => {
-    try {
-      localStorage.setItem(BOOTED_KEY, '1')
-    } catch {
-      // не критично
-    }
-    setPhase('app')
-  }
-
-  const logout = () => {
-    try {
-      localStorage.removeItem(SESSION_KEY)
-    } catch {
-      // не критично
-    }
-    setSettingsOpen(false)
-    stopSoundtrack()
-    setPhase('auth')
-  }
+  const finishBoot = () => setPhase('app')
 
   const transit = (fn: () => void) => {
     if (transitioning.current) return
@@ -813,10 +633,13 @@ export default function Stage1App() {
             onAcceptRequest={acceptRequest}
             onDeclineRequest={declineRequest}
             onToast={showBanner}
-            onEditProfile={(status, about) => {
+            onEditProfile={(nick, status, about) => {
+              const error = renameMe(nick)
+              if (error) return error
               setMyStatus(status)
               setMyAbout(about)
               showBanner('ПРОФИЛЬ ПЕРЕЗАПИСАН НА ПЛЁНКУ', 'green')
+              return null
             }}
             onOpenSettings={() => setSettingsOpen(true)}
             onGoShop={() => panel('shop')}
@@ -851,14 +674,6 @@ export default function Stage1App() {
         )
       }
     }
-  }
-
-  if (phase === 'loading') {
-    return <div className="min-h-dvh w-full bg-black" aria-label="Загрузка" />
-  }
-
-  if (phase === 'auth') {
-    return <Stage1Auth onRegister={registerAccount} onLogin={loginAccount} onStartAudio={startSoundtrack} />
   }
 
   if (phase === 'boot') {
@@ -1010,7 +825,7 @@ export default function Stage1App() {
             <p className="font-pixel text-[6px] leading-relaxed text-[#8a6f3f]">
               ДЕМО ЖИВЁТ В ЭТОМ ТЕЛЕВИЗОРЕ: КОИНЫ, ЛАВКА И КАССЕТЫ
               <br />
-              ЗАПИСЫВАЮТСЯ НА ЛОКАЛЬНУЮ ПЛЁНКУ (localStorage).
+              СБРАСЫВАЮТСЯ ПРИ КАЖДОМ ЗАПУСКЕ. НИК — «ЖОПА», ЕГО МОЖНО СМЕНИТЬ В ПРОФИЛЕ.
             </p>
             <div className="border border-[#5a3a00] bg-[#0d0a06] p-2">
               <p className="font-pixel text-[6px] leading-relaxed text-[#e8d9b0]">
@@ -1019,9 +834,6 @@ export default function Stage1App() {
                 ЛАЙКИ В МЭМ-ЭФИРЕ КАПАЮТ КОИНАМИ.
               </p>
             </div>
-            <PxButton variant="ghost" onClick={logout}>
-              ВЫЙТИ
-            </PxButton>
             <ResetButton onReset={() => {
               playTear()
               try {
