@@ -196,8 +196,8 @@ let currentTrack: string | null = null
 let musicFade: number | null = null
 let roomNoise: { source: AudioBufferSourceNode; gain: GainNode } | null = null
 
-const MUSIC_VOLUME = 0.085
-const ROOM_NOISE_VOLUME = 0.0065
+const MUSIC_VOLUME = 0.04
+const ROOM_NOISE_VOLUME = 0.018
 
 function shuffle<T>(items: T[]): T[] {
   const next = [...items]
@@ -248,8 +248,8 @@ function startRoomNoise() {
 
   const filter = c.createBiquadFilter()
   filter.type = 'bandpass'
-  filter.frequency.value = 1800
-  filter.Q.value = 0.55
+  filter.frequency.value = 1600
+  filter.Q.value = 0.45
 
   const gain = c.createGain()
   gain.gain.value = ROOM_NOISE_VOLUME
