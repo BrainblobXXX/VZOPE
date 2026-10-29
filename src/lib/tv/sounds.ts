@@ -1,4 +1,4 @@
-⁹// Синтезированные звуки «найденного телевизора» (WebAudio, без ассетов)
+// Синтезированные звуки «найденного телевизора» (WebAudio, без ассетов)
 import { AUDIO_MANIFEST } from '@/generated/media'
 
 let ctx: AudioContext | null = null
