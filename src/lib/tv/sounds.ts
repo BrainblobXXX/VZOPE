@@ -1,4 +1,4 @@
-// Синтезированные звуки «найденного телевизора» (WebAudio, без ассетов)
+⁹// Синтезированные звуки «найденного телевизора» (WebAudio, без ассетов)
 import { AUDIO_MANIFEST } from '@/generated/media'
 
 let ctx: AudioContext | null = null
@@ -196,8 +196,8 @@ let currentTrack: string | null = null
 let musicFade: number | null = null
 let roomNoise: { source: AudioBufferSourceNode; gain: GainNode } | null = null
 
-const MUSIC_VOLUME = 0.017
-const ROOM_NOISE_VOLUME = 0.005
+const MUSIC_VOLUME = 0.018
+const ROOM_NOISE_VOLUME = 0.006
 
 function shuffle<T>(items: T[]): T[] {
   const next = [...items]
