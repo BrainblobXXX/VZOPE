@@ -847,7 +847,7 @@ export default function Stage1App() {
   }
 
   if (phase === 'auth') {
-    return <Stage1Auth onRegister={registerAccount} onLogin={loginAccount} />
+    return <Stage1Auth onRegister={registerAccount} onLogin={loginAccount} onStartAudio={startSoundtrack} />
   }
 
   if (phase === 'boot') {
