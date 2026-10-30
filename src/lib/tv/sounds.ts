@@ -11,11 +11,25 @@ function ac(): AudioContext | null {
       const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
       ctx = new AC()
     }
-    if (ctx.state === 'suspended') void ctx.resume()
+    if (ctx.state === 'suspended') void ctx.resume().catch(() => {})
     return ctx
   } catch {
     return null
   }
+}
+
+/** Дожидаемся реального running: resume() в Safari/WebView асинхронный. */
+async function acReady(): Promise<AudioContext | null> {
+  const c = ac()
+  if (!c) return null
+  if (c.state === 'suspended') {
+    try {
+      await c.resume()
+    } catch {
+      return null
+    }
+  }
+  return c
 }
 
 export function setSoundEnabled(v: boolean) {
@@ -195,11 +209,13 @@ let musicQueue: string[] = []
 let currentTrack: string | null = null
 let musicFade: number | null = null
 let roomNoise: { source: AudioBufferSourceNode; gain: GainNode } | null = null
+let noiseStarting = false
+let noiseEpoch = 0
 let unlockCleanup: (() => void) | null = null
 let failedTracks = 0
 
 const MUSIC_VOLUME = 0.017
-const ROOM_NOISE_VOLUME = 0.003
+const ROOM_NOISE_VOLUME = 0.008
 
 function shuffle<T>(items: T[]): T[] {
   const next = [...items]
@@ -239,10 +255,15 @@ function fadeMusic(to: number, ms = 1400) {
   }, 40)
 }
 
-function startRoomNoise() {
-  if (!enabled) return
-  const c = ac()
-  if (!c || roomNoise) return
+async function startRoomNoise() {
+  if (!enabled || roomNoise || noiseStarting) return
+  noiseStarting = true
+  const epoch = ++noiseEpoch
+
+  const c = await acReady()
+  noiseStarting = false
+
+  if (!c || !enabled || roomNoise || epoch !== noiseEpoch) return
 
   const source = c.createBufferSource()
   source.buffer = noiseBuffer(c, 2)
@@ -262,6 +283,8 @@ function startRoomNoise() {
 }
 
 function stopRoomNoise() {
+  noiseEpoch += 1
+  noiseStarting = false
   if (!roomNoise) return
   try {
     roomNoise.source.stop()
