@@ -75,7 +75,7 @@ export default function Stage1Boot({ memes, onDone }: { memes: S1Meme[]; onDone:
       {phase === 'title' && (
         <div className="relative flex h-dvh items-center justify-center">
           <SnowOverlay active amber />
-          <h1 className="glitch-text font-pixel relative z-50 text-[30px] text-[#FFB000]">В ЖОПЕ</h1>
+          <h1 className="glitch-text font-pixel relative z-50 -translate-y-6 text-[30px] text-[#FFB000]">В ЖОПЕ</h1>
           <p className="font-pixel px-blink absolute bottom-8 z-50 text-[7px] text-[#8a6f3f]">ПОИСК СИГНАЛА...</p>
         </div>
       )}

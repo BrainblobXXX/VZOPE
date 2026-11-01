@@ -23,6 +23,7 @@ export default function Stage1Profile({
   onDeclineRequest,
   onToast,
   onEditProfile,
+  onOpenStickers,
   onOpenSettings,
   onGoShop,
 }: {
@@ -42,6 +43,7 @@ export default function Stage1Profile({
   onDeclineRequest: (userId: string) => void
   onToast: (text: string, tone?: 'amber' | 'red' | 'green') => void
   onEditProfile: (nick: string, status: string, about: string) => string | null
+  onOpenStickers: () => void
   onOpenSettings: () => void
   onGoShop?: () => void
 }) {
@@ -228,7 +230,10 @@ export default function Stage1Profile({
           </>
         )}
 
-        <div className="mt-5 flex justify-center gap-2 pb-2">
+        <div className="mt-5 flex flex-wrap justify-center gap-2 pb-2">
+          <PxButton variant="amber" className="text-[7px]" onClick={onOpenStickers}>
+            + НАКЛЕИТЬ СТИКЕР
+          </PxButton>
           <PxButton variant="ghost" className="text-[7px]" onClick={onOpenSettings}>
             НАСТРОЙКИ
           </PxButton>

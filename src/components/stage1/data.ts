@@ -261,6 +261,16 @@ export interface S1ShopItem {
   rare?: boolean
 }
 
+export interface S1StickerPlacement {
+  id: string
+  itemId: string
+  emoji: string
+  name: string
+  x: number
+  y: number
+  rotate: number
+}
+
 export const SHOP_ITEMS: S1ShopItem[] = [
   { id: 's1', kind: 'sticker', emoji: '🐸', name: 'ЖАБА_УСАТАЯ', desc: 'СМОТРИТ ОСОЗИНАННО. КЛАССИКА ЭФИРА.', price: 5 },
   { id: 's2', kind: 'sticker', emoji: '📼', name: 'КАССЕТА_ДНЯ', desc: 'ЗАПИСЬ ЧЕГО-ТО ВАЖНОГО. СЛУШАЙ САМ.', price: 7 },

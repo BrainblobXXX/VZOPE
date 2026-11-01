@@ -13,10 +13,11 @@ import Stage1Viewers from './screens/Stage1Viewers'
 import Stage1Channel from './screens/Stage1Channel'
 import Stage1DeadChannel from './screens/Stage1DeadChannel'
 import Stage1Shop from './screens/Stage1Shop'
+import Stage1StickerPicker from './Stage1StickerPicker'
 import Stage1Cassette from './screens/Stage1Cassette'
 import Stage1Boot from './Stage1Boot'
 import UserModal from './UserModal'
-import { CASSETTE_MESSAGES, GENERIC_REPLIES, MATCHES, ME, MEMES, REPLIES, SHOP_ITEMS, START_COINS, VIEWERS, type S1ChatMessage, type S1Cassette, type S1Match, type S1Meme, type S1MyMatch, type S1Request, type S1Screen, type S1ShopItem, type S1User } from './data'
+import { CASSETTE_MESSAGES, GENERIC_REPLIES, MATCHES, ME, MEMES, REPLIES, SHOP_ITEMS, START_COINS, VIEWERS, type S1ChatMessage, type S1Cassette, type S1Match, type S1Meme, type S1MyMatch, type S1Request, type S1Screen, type S1ShopItem, type S1StickerPlacement, type S1User } from './data'
 
 const STATE_KEY = 'stage1:state:v1'
 const ACCOUNT_KEY = 'stage1:account:v1'
@@ -25,6 +26,13 @@ const BOOTED_KEY = 'stage1:booted:v1'
 const DEFAULT_ABOUT = '«ЛЮБЛЮ ПЕЛЬМЕНИ, ЭЛТ И КОГДА ПОМЕХИ СКЛАДЫВАЮТСЯ В ЧЬЁ-ТО ЛИЦО. ПИШУ ОТСЮДА.»'
 
 type Phase = 'boot' | 'app'
+
+interface StickerDrag {
+  item: S1ShopItem
+  x: number
+  y: number
+  rotate: number
+}
 
 function randomInt(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min
@@ -95,6 +103,10 @@ export default function Stage1App() {
   const [matchesOpen, setMatchesOpen] = useState(false)
   const [matchProfileUser, setMatchProfileUser] = useState<S1User | null>(null)
   const [myExports, setMyExports] = useState<S1Meme[]>([])
+  const [stickers, setStickers] = useState<S1StickerPlacement[]>([])
+  const [stickerPickerOpen, setStickerPickerOpen] = useState(false)
+  const [stickerDrag, setStickerDrag] = useState<StickerDrag | null>(null)
+  const stickerDragRef = useRef<StickerDrag | null>(null)
 
   useEffect(() => {
     let alive = true
@@ -394,6 +406,71 @@ export default function Stage1App() {
   }
 
   const shopItems = SHOP_ITEMS.map((item) => ({ ...item, owned: owned.includes(item.id) }))
+  const ownedStickers = shopItems.filter((item) => item.kind === 'sticker' && item.owned)
+
+  const startStickerDrag = (item: S1ShopItem, x: number, y: number) => {
+    const drag: StickerDrag = { item, x, y, rotate: randomInt(-12, 12) }
+    stickerDragRef.current = drag
+    setStickerDrag(drag)
+    setStickerPickerOpen(false)
+  }
+
+  const stickerDragging = stickerDrag !== null
+
+  useEffect(() => {
+    if (!stickerDragging) return
+
+    const onMove = (event: PointerEvent) => {
+      const current = stickerDragRef.current
+      if (!current) return
+      const next = { ...current, x: event.clientX, y: event.clientY }
+      stickerDragRef.current = next
+      setStickerDrag(next)
+    }
+
+    const onUp = (event: PointerEvent) => {
+      const current = stickerDragRef.current
+      if (!current) return
+      stickerDragRef.current = null
+      setStickerDrag(null)
+
+      const target = document.elementFromPoint(event.clientX, event.clientY)
+      const frame = target?.closest('[data-tv-frame]') as HTMLElement | null
+      if (!frame) {
+        showBanner('МИМО. НАКЛЕЙ НА КОРПУС.', 'red')
+        return
+      }
+
+      const rect = frame.getBoundingClientRect()
+      if (rect.width === 0 || rect.height === 0) return
+      const x = Math.min(96, Math.max(4, ((event.clientX - rect.left) / rect.width) * 100))
+      const y = Math.min(96, Math.max(4, ((event.clientY - rect.top) / rect.height) * 100))
+
+      setStickers((prev) => [
+        ...prev,
+        {
+          id: `sticker-${Date.now()}-${randomInt(1, 9999)}`,
+          itemId: current.item.id,
+          emoji: current.item.emoji,
+          name: current.item.name,
+          x,
+          y,
+          rotate: current.rotate,
+        },
+      ])
+      playClick()
+      showBanner(`НАКЛЕЕНО: ${current.item.name}`, 'green')
+    }
+
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
+    }
+  }, [stickerDragging])
 
   // ── навигация ────────────────────────────────────────────────
 
@@ -636,6 +713,7 @@ export default function Stage1App() {
               showBanner('ПРОФИЛЬ ПЕРЕЗАПИСАН НА ПЛЁНКУ', 'green')
               return null
             }}
+            onOpenStickers={() => setStickerPickerOpen(true)}
             onOpenSettings={() => setSettingsOpen(true)}
             onGoShop={() => panel('shop')}
           />
@@ -684,6 +762,7 @@ export default function Stage1App() {
       soundOn={soundOn}
       musicOn={musicOn}
       noiseOn={noiseOn}
+      stickers={stickers}
       onKnob={onKnob}
       onFeed={() => panel('feed')}
       onViewers={() => panel('viewers')}
@@ -814,6 +893,32 @@ export default function Stage1App() {
           }}
           onClose={() => setMatchProfileUser(null)}
         />
+      )}
+
+      {stickerPickerOpen && (
+        <Stage1StickerPicker
+          items={ownedStickers}
+          onPick={startStickerDrag}
+          onClose={() => setStickerPickerOpen(false)}
+          onGoShop={() => {
+            setStickerPickerOpen(false)
+            panel('shop')
+          }}
+        />
+      )}
+
+      {stickerDrag && (
+        <span
+          className="pointer-events-none fixed z-[999] select-none text-[42px] leading-none drop-shadow-[2px_4px_0_rgba(0,0,0,.7)]"
+          style={{
+            left: stickerDrag.x,
+            top: stickerDrag.y,
+            transform: `translate(-50%, -50%) rotate(${stickerDrag.rotate}deg)`,
+          }}
+          aria-hidden="true"
+        >
+          {stickerDrag.item.emoji}
+        </span>
       )}
 
       {settingsOpen && (

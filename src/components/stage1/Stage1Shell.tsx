@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import { IconCart, IconMeme, IconPerson, IconWaves } from '../tv/ui'
 import { ChannelKnob } from '../tv/TVShell'
-import type { S1Screen } from './data'
+import type { S1Screen, S1StickerPlacement } from './data'
 
 function PanelButton({
   icon,
@@ -47,6 +47,7 @@ export default function Stage1Shell({
   soundOn,
   musicOn,
   noiseOn,
+  stickers,
   children,
   onKnob,
   onFeed,
@@ -64,6 +65,7 @@ export default function Stage1Shell({
   soundOn: boolean
   musicOn: boolean
   noiseOn: boolean
+  stickers: S1StickerPlacement[]
   children: ReactNode
   onKnob: () => void
   onFeed: () => void
@@ -77,7 +79,7 @@ export default function Stage1Shell({
   return (
     <div className="kitchen-bg flex min-h-dvh w-full items-center justify-center sm:p-4">
       <div className="relative flex h-dvh w-full max-w-[440px] flex-col sm:h-[min(94dvh,900px)] sm:rounded-[22px]">
-        <div className="wood-frame flex min-h-0 flex-1 flex-col rounded-t-[18px] p-2 pb-3 sm:rounded-[22px] sm:p-3">
+        <div className="wood-frame relative flex min-h-0 flex-1 flex-col rounded-t-[18px] p-2 pb-3 sm:rounded-[22px] sm:p-3" data-tv-frame>
           <div className="mb-2 flex items-center justify-between px-1">
             <span className="font-pixel text-[7px] tracking-widest text-[#c9b18a]/80">РУБИН-2094</span>
             <div className="flex items-center gap-2">
@@ -144,6 +146,25 @@ export default function Stage1Shell({
 
           <div className="mt-1 flex justify-center" aria-hidden="true">
             <div className="h-[4px] w-2/3 rounded-full bg-black/50" />
+          </div>
+
+          <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden" aria-label="Наклейки на корпусе">
+            {stickers.map((sticker) => (
+              <span
+                key={sticker.id}
+                className="absolute select-none text-[30px] leading-none drop-shadow-[1px_2px_0_rgba(0,0,0,.65)]"
+                style={{
+                  left: `${sticker.x}%`,
+                  top: `${sticker.y}%`,
+                  transform: `translate(-50%, -50%) rotate(${sticker.rotate}deg)`,
+                }}
+                role="img"
+                aria-label={`Стикер ${sticker.name}`}
+                title={sticker.name}
+              >
+                {sticker.emoji}
+              </span>
+            ))}
           </div>
         </div>
       </div>

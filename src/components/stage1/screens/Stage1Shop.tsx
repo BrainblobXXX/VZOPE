@@ -48,7 +48,7 @@ function ShopCard({
         disabled={item.owned || !afford}
         onClick={() => onBuy(item)}
       >
-        {item.owned ? (item.kind === 'sticker' ? 'В КАССЕТЕ' : 'В ИНВЕНТАРЕ') : afford ? (item.kind === 'sticker' ? 'КУПИТЬ' : 'КУПИТЬ В ПОДАРОК') : 'МАЛО КОИНОВ'}
+        {item.owned ? (item.kind === 'sticker' ? 'КУПЛЕН' : 'В ИНВЕНТАРЕ') : afford ? (item.kind === 'sticker' ? 'КУПИТЬ' : 'КУПИТЬ В ПОДАРОК') : 'МАЛО КОИНОВ'}
       </PxButton>
     </div>
   )
@@ -105,7 +105,7 @@ export default function Stage1Shop({
         </div>
 
         <p className="font-pixel mt-3 text-center text-[5px] leading-relaxed text-[#3d3020]">
-          СТИКЕРЫ — МНОГОРАЗОВЫЕ, ЛЕГКОТ В ЛЮБУЮ КАССЕТУ.
+          СТИКЕРЫ — МНОГОРАЗОВЫЕ, КЛЕЙ НА КОРПУС ТЕЛЕВИЗОРА.
           <br />
           ПОДАРКИ — ОДНОРАЗОВЫЕ, ВРУЧАЮТСЯ ЧЕРЕЗ ШАПКУ КАССЕТЫ (🎁).
           <br />
