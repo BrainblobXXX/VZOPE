@@ -721,7 +721,22 @@ export default function Stage1App() {
       case 'shop':
         return <Stage1Shop items={shopItems} coins={coins} onBuy={buyItem} />
       case 'channel':
-        return channel === 1 ? <Stage1Channel avatars={effectiveAvatars} online={online} /> : <Stage1DeadChannel channel={channel} />
+        return channel === 1 ? (
+          <Stage1Channel
+            avatars={effectiveAvatars}
+            online={online}
+            me={me}
+            coins={coins}
+            onLikeReceived={(nick) => {
+              if (screen !== 'channel') return
+              setCoins((c) => c + 1)
+              playCoin()
+              showBanner(`${nick} ЛАЙКНУЛ ТВОЙ КАДР · +1 КОИН`, 'green')
+            }}
+          />
+        ) : (
+          <Stage1DeadChannel channel={channel} />
+        )
       case 'cassette': {
         const user = VIEWERS.find((u) => u.id === cassetteUserId)
         if (!user) return null

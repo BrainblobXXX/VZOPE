@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import PhotoAvatar from '../PhotoAvatar'
-import { LIVE_INCOMING, LIVE_MESSAGES, REPLY_ACKS, VIEWERS } from '../data'
+import { IconCoin } from '../../tv/ui'
+import { LIVE_INCOMING, LIVE_MESSAGES, REPLY_ACKS, VIEWERS, type S1User } from '../data'
 
 interface LiveMsg {
   id: string
@@ -26,7 +27,19 @@ function toLive(m: (typeof LIVE_MESSAGES)[number]): LiveMsg {
   return { ...m, likes: 2 }
 }
 
-export default function Stage1Channel({ avatars, online }: { avatars: Record<string, string>; online: boolean }) {
+export default function Stage1Channel({
+  avatars,
+  online,
+  me,
+  coins,
+  onLikeReceived,
+}: {
+  avatars: Record<string, string>
+  online: boolean
+  me: S1User
+  coins: number
+  onLikeReceived: (nick: string) => void
+}) {
   const [msgs, setMsgs] = useState<LiveMsg[]>(() => [...LIVE_MESSAGES.map(toLive)])
   const [onlineCount, setOnlineCount] = useState(5)
   const [atBottom, setAtBottom] = useState(true)
@@ -36,6 +49,7 @@ export default function Stage1Channel({ avatars, online }: { avatars: Record<str
   const listRef = useRef<HTMLDivElement>(null)
   const idxRef = useRef(0)
   const ackTimersRef = useRef<number[]>([])
+
 
   // живой эфир: новые кадры каждые 9–16с + гуляющий онлайн + случайные лайки
   useEffect(() => {
@@ -129,8 +143,8 @@ export default function Stage1Channel({ avatars, online }: { avatars: Record<str
       {
         id,
         userId: 'me',
-        nick: 'ТЕЛЕПУЗИК',
-        seed: 'telepuzik',
+        nick: me.nick,
+        seed: me.seed,
         text: value.slice(0, POST_MAX),
         time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
         likes: 0,
@@ -141,16 +155,18 @@ export default function Stage1Channel({ avatars, online }: { avatars: Record<str
     setDraft('')
     setReplyTo(null)
     setAtBottom(true)
-    // кто-то из эфира может отреагировать на свежий кадр
-    if (Math.random() < 0.45) {
-      const onlineUsers = VIEWERS.filter((u) => u.online)
+    // свежий кадр гарантированно получает 1–2 лайка от зрителей;
+    // каждый лайк приносит коин и озвучивается, пока открыт канал
+    const onlineUsers = VIEWERS.filter((u) => u.online)
+    const likeCount = 1 + (Math.random() < 0.55 ? 1 : 0)
+    for (let i = 0; i < likeCount; i += 1) {
       const who = onlineUsers[Math.floor(Math.random() * onlineUsers.length)]
-      if (who) {
-        const t = window.setTimeout(() => {
-          setMsgs((prev) => prev.map((m) => (m.id === id ? { ...m, likes: m.likes + 1 } : m)))
-        }, 2600 + Math.floor(Math.random() * 4400))
-        ackTimersRef.current.push(t)
-      }
+      if (!who) break
+      const t = window.setTimeout(() => {
+        setMsgs((prev) => prev.map((m) => (m.id === id ? { ...m, likes: m.likes + 1 } : m)))
+        onLikeReceived(who.nick)
+      }, 2400 + i * 1900 + Math.floor(Math.random() * 1800))
+      ackTimersRef.current.push(t)
     }
     // а иногда — личный @ответ на мой кадр
     if (Math.random() < 0.4) {
@@ -168,7 +184,7 @@ export default function Stage1Channel({ avatars, online }: { avatars: Record<str
               text: REPLY_ACKS[Math.floor(Math.random() * REPLY_ACKS.length)],
               time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
               likes: 0,
-              replyTo: { id, nick: 'ТЕЛЕПУЗИК', text: value.slice(0, QUOTE_MAX) },
+              replyTo: { id, nick: me.nick, text: value.slice(0, QUOTE_MAX) },
             },
           ])
         }, 3200 + Math.floor(Math.random() * 5200))
@@ -184,7 +200,10 @@ export default function Stage1Channel({ avatars, online }: { avatars: Record<str
       <header className="border-b-2 border-[#6b4a00] bg-[#1c0e00]/60 px-3 py-2">
         <div className="flex items-center justify-between">
           <h2 className="font-pixel text-[11px] text-[#FFB000]">CH 1 · ФЛУДИЛКА</h2>
-          <span className="font-pixel text-[7px] text-[#33FF00]">● {onlineCount}/{VIEWERS.length + 1}</span>
+          <span className="flex items-center gap-2">
+            <span className="font-pixel flex items-center gap-1 text-[7px] text-[#FFB000]"><IconCoin size={8} /> {coins}</span>
+            <span className="font-pixel text-[7px] text-[#33FF00]">● {onlineCount}/{VIEWERS.length + 1}</span>
+          </span>
         </div>
         <p className="font-pixel mt-1 text-[6px] text-[#8a6f3f]">
           ГЛАВНЫЙ КАНАЛ. ТУТ БОЛТАЕМ ОБО ВСЁМ. {online ? '' : '· СИГНАЛ ПОТЕРЯН'}
