@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Banner, Modal, PxButton } from '../tv/ui'
 import SnowOverlay from '../tv/SnowOverlay'
 import PhotoAvatar from './PhotoAvatar'
-import { pauseSoundtrack, playBeep, playCassette, playClick, playCoin, playError, playMatch, playSend, playSwipe, playSwitch, playTear, resumeSoundtrack, setSoundEnabled, startHum, startSoundtrack, stopHum, stopSoundtrack } from '../../lib/tv/sounds'
+import { pauseSoundtrack, playBeep, playCassette, playClick, playCoin, playError, playMatch, playSend, playSwipe, playSwitch, playTear, resumeSoundtrack, setMusicEnabled, setNoiseEnabled, setSfxEnabled, startHum, startSoundtrack, stopSoundtrack } from '../../lib/tv/sounds'
 import Stage1Shell from './Stage1Shell'
 import Stage1MatchModal from './Stage1MatchModal'
 import Stage1Feed from './screens/Stage1Feed'
@@ -71,6 +71,8 @@ export default function Stage1App() {
   const [cassettes, setCassettes] = useState<S1Cassette[]>([])
   const [requests, setRequests] = useState<S1Request[]>([])
   const [soundOn, setSoundOn] = useState(true)
+  const [musicOn, setMusicOn] = useState(true)
+  const [noiseOn, setNoiseOn] = useState(true)
   const [online, setOnline] = useState(true)
   const [banner, setBanner] = useState<{ text: string; tone: 'amber' | 'red' | 'green' } | null>(null)
   const [memes, setMemes] = useState<S1Meme[]>(() => shuffle(MEMES))
@@ -148,11 +150,11 @@ export default function Stage1App() {
   useEffect(() => {
     const onVisibility = () => {
       if (document.hidden) pauseSoundtrack()
-      else if (soundOn) resumeSoundtrack()
+      else if (musicOn || noiseOn) resumeSoundtrack()
     }
     const onPageHide = () => pauseSoundtrack()
     const onPageShow = () => {
-      if (!document.hidden && soundOn) resumeSoundtrack()
+      if (!document.hidden && (musicOn || noiseOn)) resumeSoundtrack()
     }
 
     document.addEventListener('visibilitychange', onVisibility)
@@ -163,7 +165,7 @@ export default function Stage1App() {
       window.removeEventListener('pagehide', onPageHide)
       window.removeEventListener('pageshow', onPageShow)
     }
-  }, [soundOn])
+  }, [musicOn, noiseOn])
 
   const transitioning = useRef(false)
   const bannerTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -417,35 +419,25 @@ export default function Stage1App() {
 
   const toggleAntenna = () => {
     playClick()
-    const next = !online
-    onlineRef.current = next
-    setOnline(next)
-    showBanner(next ? 'СИГНАЛ ПОЙМАН. ПАКЕТЫ УШЛИ.' : 'СИГНАЛ ПОТЕРЯН. ПРОВЕРЬ СВЯЗЬ.', next ? 'green' : 'red')
-    if (next && pendingRepliesRef.current.length > 0) {
-      const queued = [...pendingRepliesRef.current]
-      pendingRepliesRef.current = []
-      queued.forEach((entry, i) => {
-        const t = window.setTimeout(() => {
-          if (entry.startsWith('match:')) deliverRequestAccept(entry.slice(6))
-          else deliverReply(entry)
-        }, 600 + i * 1200)
-        replyTimersRef.current.push(t)
-      })
-    }
+    const next = !noiseOn
+    setNoiseOn(next)
+    setNoiseEnabled(next)
+  }
+
+  const toggleMusic = () => {
+    playClick()
+    const next = !musicOn
+    setMusicOn(next)
+    setMusicEnabled(next)
+    if (next) startSoundtrack()
+    else stopSoundtrack()
   }
 
   const toggleSound = () => {
     playClick()
     const next = !soundOn
     setSoundOn(next)
-    setSoundEnabled(next)
-    if (next) {
-      startHum()
-      startSoundtrack()
-    } else {
-      stopHum()
-      stopSoundtrack()
-    }
+    setSfxEnabled(next)
   }
 
   // ── фоновые входящие заявки от зрителей ─────────────────────
@@ -686,8 +678,9 @@ export default function Stage1App() {
       channel={channel}
       matchBadge={matchBadge}
       profileBadge={profileBadge}
-      online={online}
       soundOn={soundOn}
+      musicOn={musicOn}
+      noiseOn={noiseOn}
       onKnob={onKnob}
       onFeed={() => panel('feed')}
       onViewers={() => panel('viewers')}
@@ -695,6 +688,7 @@ export default function Stage1App() {
       onShop={() => panel('shop')}
       onAntenna={toggleAntenna}
       onSound={toggleSound}
+      onMusic={toggleMusic}
     >
       <div className={`crt-wrap h-full ${crtOff ? 'crt-off' : ''}`}>{screenContent()}</div>
 

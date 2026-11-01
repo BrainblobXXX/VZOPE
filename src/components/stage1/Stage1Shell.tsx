@@ -44,8 +44,9 @@ export default function Stage1Shell({
   channel,
   matchBadge,
   profileBadge,
-  online,
   soundOn,
+  musicOn,
+  noiseOn,
   children,
   onKnob,
   onFeed,
@@ -54,13 +55,15 @@ export default function Stage1Shell({
   onShop,
   onAntenna,
   onSound,
+  onMusic,
 }: {
   screen: S1Screen
   channel: number
   matchBadge: number
   profileBadge: number
-  online: boolean
   soundOn: boolean
+  musicOn: boolean
+  noiseOn: boolean
   children: ReactNode
   onKnob: () => void
   onFeed: () => void
@@ -69,6 +72,7 @@ export default function Stage1Shell({
   onShop: () => void
   onAntenna: () => void
   onSound: () => void
+  onMusic: () => void
 }) {
   return (
     <div className="kitchen-bg flex min-h-dvh w-full items-center justify-center sm:p-4">
@@ -79,22 +83,33 @@ export default function Stage1Shell({
             <div className="flex items-center gap-2">
               <button
                 onClick={onSound}
-                className="font-pixel flex items-center gap-1 rounded-sm bg-[#1a1713] px-2 py-1 text-[6px] text-[#8a7a5a] active:translate-y-[1px]"
+                className="font-pixel flex items-center gap-1 rounded-sm bg-[#1a1713] px-1.5 py-1 text-[5.5px] text-[#8a7a5a] active:translate-y-[1px]"
                 aria-pressed={soundOn}
-                aria-label="Переключатель звука"
+                aria-label="Переключатель звуковых эффектов"
+                title="Звук: щелчки и эффекты"
               >
                 <span className={`inline-block h-[6px] w-[6px] rounded-full ${soundOn ? 'bg-[#33FF00] led' : 'bg-[#3a332c]'}`} />
                 ЗВУК
               </button>
               <button
-                onClick={onAntenna}
-                className="font-pixel flex items-center gap-1 rounded-sm bg-[#1a1713] px-2 py-1 text-[6px] text-[#8a7a5a] active:translate-y-[1px]"
-                aria-pressed={online}
-                aria-label="Сеть"
-                title="Сеть: вкл/выкл"
+                onClick={onMusic}
+                className="font-pixel flex items-center gap-1 rounded-sm bg-[#1a1713] px-1.5 py-1 text-[5.5px] text-[#8a7a5a] active:translate-y-[1px]"
+                aria-pressed={musicOn}
+                aria-label="Переключатель музыки"
+                title="Музыка: саундтрек"
               >
-                <span className={`inline-block h-[6px] w-[6px] rounded-full ${online ? 'bg-[#33FF00] led' : 'bg-[#3a332c]'}`} />
-                ANT
+                <span className={`inline-block h-[6px] w-[6px] rounded-full ${musicOn ? 'bg-[#FFB000] led' : 'bg-[#3a332c]'}`} />
+                МУЗЫКА
+              </button>
+              <button
+                onClick={onAntenna}
+                className="font-pixel flex items-center gap-1 rounded-sm bg-[#1a1713] px-1.5 py-1 text-[5.5px] text-[#8a7a5a] active:translate-y-[1px]"
+                aria-pressed={noiseOn}
+                aria-label="Переключатель шума антенны"
+                title="Антенна: шум помех"
+              >
+                <span className={`inline-block h-[6px] w-[6px] rounded-full ${noiseOn ? 'bg-[#33FF00] led' : 'bg-[#3a332c]'}`} />
+                АНТ
               </button>
             </div>
           </div>

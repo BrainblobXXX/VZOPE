@@ -2,7 +2,9 @@
 import { AUDIO_MANIFEST } from '@/generated/media'
 
 let ctx: AudioContext | null = null
-let enabled = true
+let sfxEnabled = true
+let musicEnabled = true
+let noiseEnabled = true
 
 function ac(): AudioContext | null {
   if (typeof window === 'undefined') return null
@@ -32,15 +34,39 @@ async function acReady(): Promise<AudioContext | null> {
   return c
 }
 
+export function setSfxEnabled(v: boolean) {
+  sfxEnabled = v
+}
+
+export function setMusicEnabled(v: boolean) {
+  musicEnabled = v
+  if (!v) stopSoundtrack()
+}
+
+export function setNoiseEnabled(v: boolean) {
+  noiseEnabled = v
+  if (!v) {
+    stopHum()
+    stopRoomNoise()
+    return
+  }
+  startHum()
+  void startRoomNoise()
+}
+
+/** Мастер-переключатель для старого /classic: выключает всё сразу. */
 export function setSoundEnabled(v: boolean) {
-  enabled = v
+  sfxEnabled = v
+  musicEnabled = v
+  noiseEnabled = v
   if (!v) {
     stopHum()
     stopSoundtrack()
+    stopRoomNoise()
   }
 }
 export function isSoundEnabled() {
-  return enabled
+  return sfxEnabled
 }
 
 function noiseBuffer(c: AudioContext, dur: number): AudioBuffer {
@@ -52,7 +78,7 @@ function noiseBuffer(c: AudioContext, dur: number): AudioBuffer {
 }
 
 function playNoise(dur: number, vol: number, freq = 1200, q = 0.8) {
-  if (!enabled) return
+  if (!sfxEnabled) return
   const c = ac()
   if (!c) return
   const src = c.createBufferSource()
@@ -69,7 +95,7 @@ function playNoise(dur: number, vol: number, freq = 1200, q = 0.8) {
 }
 
 function playTone(freq: number, dur: number, vol: number, type: OscillatorType = 'square', slideTo?: number) {
-  if (!enabled) return
+  if (!sfxEnabled) return
   const c = ac()
   if (!c) return
   const osc = c.createOscillator()
@@ -156,7 +182,7 @@ export function playTear() {
 let humNodes: { osc: OscillatorNode; lfo: OscillatorNode; gain: GainNode } | null = null
 
 export function startHum() {
-  if (!enabled || humNodes) return
+  if (!noiseEnabled || humNodes) return
   const c = ac()
   if (!c) return
   try {
@@ -214,8 +240,8 @@ let noiseEpoch = 0
 let unlockCleanup: (() => void) | null = null
 let failedTracks = 0
 
-const MUSIC_VOLUME = 0.019
-const ROOM_NOISE_VOLUME = 0.009
+const MUSIC_VOLUME = 0.018
+const ROOM_NOISE_VOLUME = 0.007
 
 function shuffle<T>(items: T[]): T[] {
   const next = [...items]
@@ -256,14 +282,14 @@ function fadeMusic(to: number, ms = 1400) {
 }
 
 async function startRoomNoise() {
-  if (!enabled || roomNoise || noiseStarting) return
+  if (!noiseEnabled || roomNoise || noiseStarting) return
   noiseStarting = true
   const epoch = ++noiseEpoch
 
   const c = await acReady()
   noiseStarting = false
 
-  if (!c || !enabled || roomNoise || epoch !== noiseEpoch) return
+  if (!c || !noiseEnabled || roomNoise || epoch !== noiseEpoch) return
 
   const source = c.createBufferSource()
   source.buffer = noiseBuffer(c, 2)
@@ -366,7 +392,7 @@ function playNextTrack() {
 }
 
 export function startSoundtrack() {
-  if (!enabled || typeof window === 'undefined' || AUDIO_MANIFEST.length === 0) return
+  if (!musicEnabled || typeof window === 'undefined' || AUDIO_MANIFEST.length === 0) return
 
   if (!soundtrack) {
     soundtrack = new Audio()
@@ -417,8 +443,6 @@ export function stopSoundtrack() {
   soundtrackActive = false
   clearMusicFade()
   clearAudioUnlock()
-  stopRoomNoise()
-  stopHum()
   musicQueue = []
   currentTrack = null
   failedTracks = 0
@@ -438,7 +462,9 @@ export function pauseSoundtrack() {
 }
 
 export function resumeSoundtrack() {
-  if (!enabled || !soundtrackActive || !soundtrack) return
-  startHum()
-  requestPlay()
+  if (noiseEnabled) {
+    startHum()
+    void startRoomNoise()
+  }
+  if (musicEnabled && soundtrackActive && soundtrack) requestPlay()
 }
