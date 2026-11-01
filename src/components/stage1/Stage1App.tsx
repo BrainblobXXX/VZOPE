@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Banner, Modal, PxButton } from '../tv/ui'
 import SnowOverlay from '../tv/SnowOverlay'
 import PhotoAvatar from './PhotoAvatar'
-import { pauseSoundtrack, playBeep, playCassette, playClick, playCoin, playError, playMatch, playSend, playSwipe, playSwitch, playTear, resumeSoundtrack, setMusicEnabled, setNoiseEnabled, setSfxEnabled, startHum, startSoundtrack, stopSoundtrack } from '../../lib/tv/sounds'
+import { pauseSoundtrack, playBeep, playCassette, playClick, playCoin, playError, playMatch, playSend, playSwipe, playSwitch, playTear, resumeSoundtrack, setMusicEnabled, setMusicVolume as applyMusicVolume, setNoiseEnabled, setNoiseVolume as applyNoiseVolume, setSfxEnabled, setSfxVolume as applySfxVolume, startHum, startSoundtrack, stopSoundtrack } from '../../lib/tv/sounds'
 import Stage1Shell from './Stage1Shell'
 import Stage1MatchModal from './Stage1MatchModal'
 import Stage1Feed from './screens/Stage1Feed'
@@ -73,6 +73,9 @@ export default function Stage1App() {
   const [soundOn, setSoundOn] = useState(true)
   const [musicOn, setMusicOn] = useState(true)
   const [noiseOn, setNoiseOn] = useState(true)
+  const [musicVolume, setMusicVolume] = useState(5)
+  const [noiseVolume, setNoiseVolume] = useState(5)
+  const [sfxVolume, setSfxVolume] = useState(5)
   const [online, setOnline] = useState(true)
   const [banner, setBanner] = useState<{ text: string; tone: 'amber' | 'red' | 'green' } | null>(null)
   const [memes, setMemes] = useState<S1Meme[]>(() => shuffle(MEMES))
@@ -828,6 +831,38 @@ export default function Stage1App() {
                 ЛАЙКИ В МЭМ-ЭФИРЕ КАПАЮТ КОИНАМИ.
               </p>
             </div>
+            <div className="border border-[#5a3a00] bg-[#0d0a06] p-2">
+              <p className="font-pixel text-[6px] text-[#FFB000]">ГРОМКОСТЬ</p>
+              <div className="mt-2 flex flex-col gap-2">
+                <VolumeSlider
+                  label="МУЗЫКА"
+                  value={musicVolume}
+                  onChange={(value) => {
+                    setMusicVolume(value)
+                    applyMusicVolume(value)
+                  }}
+                />
+                <VolumeSlider
+                  label="ШУМ"
+                  value={noiseVolume}
+                  onChange={(value) => {
+                    setNoiseVolume(value)
+                    applyNoiseVolume(value)
+                  }}
+                />
+                <VolumeSlider
+                  label="ЗВУКИ"
+                  value={sfxVolume}
+                  onChange={(value) => {
+                    setSfxVolume(value)
+                    applySfxVolume(value)
+                  }}
+                />
+              </div>
+              <p className="font-pixel mt-2 text-[5px] leading-relaxed text-[#5a4626]">
+                0 — ТИШИНА · 5 — БАЗОВЫЙ · 10 — x2
+              </p>
+            </div>
             <ResetButton onReset={() => {
               playTear()
               try {
@@ -848,6 +883,35 @@ export default function Stage1App() {
         </Modal>
       )}
     </Stage1Shell>
+  )
+}
+
+function VolumeSlider({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+}) {
+  return (
+    <label className="block">
+      <span className="font-pixel flex items-center justify-between text-[6px] text-[#8a6f3f]">
+        <span>{label}</span>
+        <span className="text-[#FFB000]">{value}/10</span>
+      </span>
+      <input
+        type="range"
+        min={0}
+        max={10}
+        step={1}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        className="mt-1 h-1 w-full cursor-pointer accent-[#FFB000]"
+        aria-label={`Громкость: ${label}`}
+      />
+    </label>
   )
 }
 

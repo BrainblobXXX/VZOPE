@@ -5,6 +5,9 @@ let ctx: AudioContext | null = null
 let sfxEnabled = true
 let musicEnabled = true
 let noiseEnabled = true
+let sfxVolumeScale = 1
+let musicVolumeScale = 1
+let noiseVolumeScale = 1
 
 function ac(): AudioContext | null {
   if (typeof window === 'undefined') return null
@@ -54,6 +57,33 @@ export function setNoiseEnabled(v: boolean) {
   void startRoomNoise()
 }
 
+/** 0 — тишина, 5 — базовый уровень, 10 — x2 от базового. */
+function levelScale(level: number): number {
+  return Math.max(0, Math.min(10, level)) / 5
+}
+
+export function setSfxVolume(level: number) {
+  sfxVolumeScale = levelScale(level)
+}
+
+export function setMusicVolume(level: number) {
+  musicVolumeScale = levelScale(level)
+  if (soundtrack && soundtrackActive && !soundtrack.paused) {
+    fadeMusic(MUSIC_VOLUME * musicVolumeScale, 250)
+  }
+}
+
+export function setNoiseVolume(level: number) {
+  noiseVolumeScale = levelScale(level)
+  const now = ctx?.currentTime ?? 0
+  if (humNodes) {
+    humNodes.gain.gain.setTargetAtTime(HUM_VOLUME * noiseVolumeScale, now, 0.08)
+  }
+  if (roomNoise) {
+    roomNoise.gain.gain.setTargetAtTime(ROOM_NOISE_VOLUME * noiseVolumeScale, now, 0.08)
+  }
+}
+
 /** Мастер-переключатель для старого /classic: выключает всё сразу. */
 export function setSoundEnabled(v: boolean) {
   sfxEnabled = v
@@ -78,7 +108,8 @@ function noiseBuffer(c: AudioContext, dur: number): AudioBuffer {
 }
 
 function playNoise(dur: number, vol: number, freq = 1200, q = 0.8) {
-  if (!sfxEnabled) return
+  const scaled = vol * sfxVolumeScale
+  if (!sfxEnabled || scaled <= 0) return
   const c = ac()
   if (!c) return
   const src = c.createBufferSource()
@@ -88,14 +119,15 @@ function playNoise(dur: number, vol: number, freq = 1200, q = 0.8) {
   filter.frequency.value = freq
   filter.Q.value = q
   const gain = c.createGain()
-  gain.gain.setValueAtTime(vol, c.currentTime)
+  gain.gain.setValueAtTime(scaled, c.currentTime)
   gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur)
   src.connect(filter).connect(gain).connect(c.destination)
   src.start()
 }
 
 function playTone(freq: number, dur: number, vol: number, type: OscillatorType = 'square', slideTo?: number) {
-  if (!sfxEnabled) return
+  const scaled = vol * sfxVolumeScale
+  if (!sfxEnabled || scaled <= 0) return
   const c = ac()
   if (!c) return
   const osc = c.createOscillator()
@@ -103,7 +135,7 @@ function playTone(freq: number, dur: number, vol: number, type: OscillatorType =
   osc.frequency.setValueAtTime(freq, c.currentTime)
   if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime + dur)
   const gain = c.createGain()
-  gain.gain.setValueAtTime(vol, c.currentTime)
+  gain.gain.setValueAtTime(scaled, c.currentTime)
   gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur)
   osc.connect(gain).connect(c.destination)
   osc.start()
@@ -180,6 +212,7 @@ export function playTear() {
 // ── фоновый гул ЭЛТ (тихий, постоянный; раздел 2.4 диз-дока) ──
 
 let humNodes: { osc: OscillatorNode; lfo: OscillatorNode; gain: GainNode } | null = null
+const HUM_VOLUME = 0.005
 
 export function startHum() {
   if (!noiseEnabled || humNodes) return
@@ -187,7 +220,7 @@ export function startHum() {
   if (!c) return
   try {
     const gain = c.createGain()
-    gain.gain.value = 0.005
+    gain.gain.value = HUM_VOLUME * noiseVolumeScale
     // базовый тон 55 Гц (трансформатор)
     const osc = c.createOscillator()
     osc.type = 'sine'
@@ -301,7 +334,7 @@ async function startRoomNoise() {
   filter.Q.value = 0.45
 
   const gain = c.createGain()
-  gain.gain.value = ROOM_NOISE_VOLUME
+  gain.gain.value = ROOM_NOISE_VOLUME * noiseVolumeScale
 
   source.connect(filter).connect(gain).connect(c.destination)
   source.start()
@@ -358,7 +391,7 @@ function requestPlay() {
   const result = soundtrack.play()
   if (!result) {
     startRoomNoise()
-    fadeMusic(MUSIC_VOLUME, 1400)
+    fadeMusic(MUSIC_VOLUME * musicVolumeScale, 1400)
     return
   }
 
@@ -367,7 +400,7 @@ function requestPlay() {
       clearAudioUnlock()
       failedTracks = 0
       startRoomNoise()
-      fadeMusic(MUSIC_VOLUME, 1400)
+      fadeMusic(MUSIC_VOLUME * musicVolumeScale, 1400)
     })
     .catch(() => {
       // Шум не должен играть отдельно от музыки: иначе получается
