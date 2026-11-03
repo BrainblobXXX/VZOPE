@@ -435,6 +435,10 @@ export default function Stage1App() {
       setStickerDrag(null)
 
       const target = document.elementFromPoint(event.clientX, event.clientY)
+      if (target?.closest('[data-tv-screen]')) {
+        showBanner('НА ЭКРАН НЕЛЬЗЯ. КЛЕЙ НА КОРПУС.', 'red')
+        return
+      }
       const frame = target?.closest('[data-tv-frame]') as HTMLElement | null
       if (!frame) {
         showBanner('МИМО. НАКЛЕЙ НА КОРПУС.', 'red')
@@ -705,9 +709,16 @@ export default function Stage1App() {
             onAcceptRequest={acceptRequest}
             onDeclineRequest={declineRequest}
             onToast={showBanner}
-            onEditProfile={(nick, status, about) => {
+            onEditProfile={(nick, status, about, extra) => {
               const error = renameMe(nick)
               if (error) return error
+              setMe((prev) => ({
+                ...prev,
+                height: extra.height,
+                build: extra.build,
+                sporty: extra.sporty,
+                city: extra.city,
+              }))
               setMyStatus(status)
               setMyAbout(about)
               showBanner('ПРОФИЛЬ ПЕРЕЗАПИСАН НА ПЛЁНКУ', 'green')

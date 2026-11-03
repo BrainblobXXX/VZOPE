@@ -79,7 +79,7 @@ export default function Stage1Shell({
   return (
     <div className="kitchen-bg flex min-h-dvh w-full items-center justify-center sm:p-4">
       <div className="relative flex h-dvh w-full max-w-[440px] flex-col sm:h-[min(94dvh,900px)] sm:rounded-[22px]">
-        <div className="wood-frame relative flex min-h-0 flex-1 flex-col rounded-t-[18px] p-2 pb-3 sm:rounded-[22px] sm:p-3" data-tv-frame>
+        <div className="wood-frame relative flex min-h-0 flex-1 flex-col rounded-t-[18px] p-2 pb-3 sm:rounded-[22px] sm:p-3" data-tv-frame="true">
           <div className="mb-2 flex items-center justify-between px-1">
             <span className="font-pixel text-[7px] tracking-widest text-[#c9b18a]/80">РУБИН-2094</span>
             <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export default function Stage1Shell({
           </div>
 
           <div className="plastic-bezel wear-scratches relative flex min-h-0 flex-1 flex-col gap-2 rounded-[10px] p-2">
-            <div className="crt-glass relative min-h-0 flex-1 overflow-hidden rounded-[8px]" style={{ borderRadius: '10px / 8px', boxShadow: 'inset 0 0 24px rgba(0,0,0,.8), inset 0 0 4px rgba(0,0,0,.9)' }}>
+            <div className="crt-glass relative min-h-0 flex-1 overflow-hidden rounded-[8px]" data-tv-screen="true" style={{ borderRadius: '10px / 8px', boxShadow: 'inset 0 0 24px rgba(0,0,0,.8), inset 0 0 4px rgba(0,0,0,.9)' }}>
               {children}
             </div>
 

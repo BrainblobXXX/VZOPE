@@ -18,9 +18,9 @@ export default function Stage1StickerPicker({
     <Modal title="НАКЛЕИТЬ СТИКЕР" onClose={onClose} wide>
       <div className="flex flex-col gap-2">
         <p className="font-pixel text-[6px] leading-relaxed text-[#8a6f3f]">
-          ВЫБЕРИ СТИКЕР И ПЕРЕТАЩИ ЕГО НА КОРПУС ТЕЛЕВИЗОРА.
+          ВЫБЕРИ СТИКЕР И ПЕРЕТАЩИ ЕГО НА ДЕРЕВЯННЫЙ КОРПУС.
           <br />
-          ОТПУСТИ НАД ДЕРЕВОМ — СТИКЕР ОСТАНЕТСЯ НА СЕССИЮ.
+          НА ЭКРАН КЛЕИТЬ НЕЛЬЗЯ. ОТПУСТИ НАД ДЕРЕВОМ — СТИКЕР ОСТАНЕТСЯ НА СЕССИЮ.
         </p>
 
         {items.length === 0 ? (

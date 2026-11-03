@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import PhotoAvatar from '../PhotoAvatar'
 import UserModal from '../UserModal'
 import { IconCoin, Modal, PxButton, TestBars } from '../../tv/ui'
-import { ABOUT_MAX, STATUS_MAX, VIEWERS, type S1Cassette, type S1Request, type S1User } from '../data'
+import { ABOUT_MAX, STATUS_MAX, VIEWERS, type S1Build, type S1Cassette, type S1Request, type S1User } from '../data'
 
 export default function Stage1Profile({
   avatars,
@@ -42,7 +42,12 @@ export default function Stage1Profile({
   onAcceptRequest: (userId: string) => void
   onDeclineRequest: (userId: string) => void
   onToast: (text: string, tone?: 'amber' | 'red' | 'green') => void
-  onEditProfile: (nick: string, status: string, about: string) => string | null
+  onEditProfile: (
+    nick: string,
+    status: string,
+    about: string,
+    extra: { height?: number; build: S1Build; sporty: boolean; city: string },
+  ) => string | null
   onOpenStickers: () => void
   onOpenSettings: () => void
   onGoShop?: () => void
@@ -54,6 +59,10 @@ export default function Stage1Profile({
   const [draftNick, setDraftNick] = useState(me.nick)
   const [draftStatus, setDraftStatus] = useState(myStatus)
   const [draftAbout, setDraftAbout] = useState(myAbout)
+  const [draftHeight, setDraftHeight] = useState(me.height?.toString() ?? '')
+  const [draftBuild, setDraftBuild] = useState<S1Build>(me.build ?? 'average')
+  const [draftSporty, setDraftSporty] = useState(me.sporty ?? false)
+  const [draftCity, setDraftCity] = useState(me.city ?? '')
   const [editError, setEditError] = useState('')
 
   const onFile = (file?: File) => {
@@ -123,9 +132,15 @@ export default function Stage1Profile({
                 ПОЛ {me.gender} · ВОЗРАСТ {me.age ?? '—'} · МЭТЧИ {matchesCount} · <IconCoin size={10} color="#FFB000" /> {coins}
               </p>
               <p className="font-pixel mt-1.5 max-w-[195px] truncate text-[6.5px] text-[#33FF00]">● {myStatus}</p>
+              <p className="font-pixel mt-1 text-[6px] leading-relaxed text-[#8a6f3f]">
+                РОСТ {me.height ? `${me.height} СМ` : '—'} · ТЕЛОСЛОЖЕНИЕ {me.build === 'thin' ? 'ХУДОЕ' : me.build === 'full' ? 'ПОЛНОЕ' : 'СРЕДНЕЕ'}
+              </p>
+              <p className="font-pixel mt-0.5 text-[6px] leading-relaxed text-[#8a6f3f]">
+                {me.sporty ? (me.gender === 'Ж' ? 'СПОРТИВНАЯ' : 'СПОРТИВНЫЙ') : (me.gender === 'Ж' ? 'НЕСПОРТИВНАЯ' : 'НЕСПОРТИВНЫЙ')} · ГОРОД {me.city || '—'}
+              </p>
             </div>
           </div>
-          <PxButton variant="ghost" className="px-2 py-1 text-[7px]" onClick={() => { setDraftNick(me.nick); setDraftStatus(myStatus); setDraftAbout(myAbout); setEditError(''); setEditOpen(true) }}>
+          <PxButton variant="ghost" className="px-2 py-1 text-[7px]" onClick={() => { setDraftNick(me.nick); setDraftStatus(myStatus); setDraftAbout(myAbout); setDraftHeight(me.height?.toString() ?? ''); setDraftBuild(me.build ?? 'average'); setDraftSporty(me.sporty ?? false); setDraftCity(me.city ?? ''); setEditError(''); setEditOpen(true) }}>
             ✎ РЕД.
           </PxButton>
         </div>
@@ -325,16 +340,80 @@ export default function Stage1Profile({
               />
               <span className="font-pixel mt-0.5 block text-right text-[5px] text-[#5a4626]">{draftAbout.length}/{ABOUT_MAX}</span>
             </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block">
+                <span className="font-pixel mb-1 block text-[5px] text-[#8a6f3f]">РОСТ, СМ</span>
+                <input
+                  type="number"
+                  min={100}
+                  max={250}
+                  value={draftHeight}
+                  onChange={(e) => setDraftHeight(e.target.value)}
+                  className="font-pixel w-full border-2 border-[#5a3a00] bg-[#140c04] px-2 py-2 text-[7px] text-[#e8d9b0] focus:border-[#FFB000] focus:outline-none"
+                  aria-label="Рост в сантиметрах"
+                  placeholder="175"
+                />
+              </label>
+              <label className="block">
+                <span className="font-pixel mb-1 block text-[5px] text-[#8a6f3f]">ТЕЛОСЛОЖЕНИЕ</span>
+                <select
+                  value={draftBuild}
+                  onChange={(e) => setDraftBuild(e.target.value as S1Build)}
+                  className="font-pixel w-full border-2 border-[#5a3a00] bg-[#140c04] px-2 py-2 text-[7px] text-[#e8d9b0] focus:border-[#FFB000] focus:outline-none"
+                  aria-label="Телосложение"
+                >
+                  <option value="thin">ХУДОЕ</option>
+                  <option value="average">СРЕДНЕЕ</option>
+                  <option value="full">ПОЛНОЕ</option>
+                </select>
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block">
+                <span className="font-pixel mb-1 block text-[5px] text-[#8a6f3f]">СПОРТ</span>
+                <select
+                  value={draftSporty ? 'yes' : 'no'}
+                  onChange={(e) => setDraftSporty(e.target.value === 'yes')}
+                  className="font-pixel w-full border-2 border-[#5a3a00] bg-[#140c04] px-2 py-2 text-[7px] text-[#e8d9b0] focus:border-[#FFB000] focus:outline-none"
+                  aria-label="Спортивный или нет"
+                >
+                  <option value="no">НЕСПОРТИВНЫЙ/АЯ</option>
+                  <option value="yes">СПОРТИВНЫЙ/АЯ</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="font-pixel mb-1 block text-[5px] text-[#8a6f3f]">ГОРОД</span>
+                <input
+                  value={draftCity}
+                  maxLength={40}
+                  onChange={(e) => setDraftCity(e.target.value.toUpperCase())}
+                  className="font-pixel w-full border-2 border-[#5a3a00] bg-[#140c04] px-2 py-2 text-[7px] text-[#e8d9b0] focus:border-[#FFB000] focus:outline-none"
+                  aria-label="Город"
+                  placeholder="МОСКВА"
+                />
+              </label>
+            </div>
             <div className="flex gap-1.5">
               <PxButton
                 variant="green"
                 className="flex-1"
                 disabled={draftNick.trim().length === 0 || draftStatus.trim().length === 0 || draftAbout.trim().length === 0}
                 onClick={() => {
+                  const heightValue = draftHeight.trim() ? Number(draftHeight) : undefined
+                  if (heightValue !== undefined && (!Number.isInteger(heightValue) || heightValue < 100 || heightValue > 250)) {
+                    setEditError('РОСТ — ЦЕЛОЕ ЧИСЛО ОТ 100 ДО 250 СМ')
+                    return
+                  }
                   const error = onEditProfile(
                     draftNick.trim(),
                     draftStatus.trim().slice(0, STATUS_MAX),
                     draftAbout.trim().slice(0, ABOUT_MAX),
+                    {
+                      height: heightValue,
+                      build: draftBuild,
+                      sporty: draftSporty,
+                      city: draftCity.trim().toUpperCase(),
+                    },
                   )
                   if (error) {
                     setEditError(error)

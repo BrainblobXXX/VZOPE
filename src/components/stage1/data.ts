@@ -11,12 +11,18 @@ export interface S1Account {
   passwordHash: string
 }
 
+export type S1Build = 'thin' | 'average' | 'full'
+
 export interface S1User {
   id: string
   nick: string
   seed: string
   gender: 'М' | 'Ж'
   age?: number
+  height?: number
+  build?: S1Build
+  sporty?: boolean
+  city?: string
   online: boolean
   status: string
   orientation?: string
@@ -58,6 +64,10 @@ export const ME: S1User = {
   seed: 'zhopa',
   gender: 'М',
   age: 27,
+  height: 175,
+  build: 'average',
+  sporty: false,
+  city: 'МОСКВА',
   online: true,
   status: 'смотрит мем-эфир',
 }
